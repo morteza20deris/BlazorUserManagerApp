@@ -1,0 +1,100 @@
+﻿@page "/AddEmployee"
+@using BlazorUserManagerApp.Models
+@using BlazorUserManagerApp.Services
+@using static BlazorUserManagerApp.Components.Warning
+<h3>AddEmployee</h3>
+
+@if (showWarning)
+{
+    <Warning OnClickCallback="DismissWarning" Type=@Warning_Type Message="@Warning_Message" />
+}
+else
+{
+    
+    <Card>
+        <div class="row user-detail-row">
+            <h3>Add New Employee</h3>
+            <div class="form-group">
+                <EditForm Model="@addEmployeeForm" OnValidSubmit="AddNewEmployee">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <p>
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput" placeholder="Full Name here" @bind-Value="addEmployeeForm.FullName" />
+                            <label for="floatingInput">Full Name</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput" placeholder="UserName here" @bind-Value="addEmployeeForm.UserName" />
+                            <label for="floatingInput">UserName</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput" placeholder="Email here" @bind-Value="addEmployeeForm.Email" />
+                            <label for="floatingInput">Email</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput" placeholder="Password here" @bind-Value="addEmployeeForm.PasswordHash" />
+                            <label for="floatingInput">Password</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput" placeholder="PhoneNumber here" @bind-Value="addEmployeeForm.PhoneNumber" />
+                            <label for="floatingInput">PhoneNumber</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputNumber class="form-control" id="floatingInput" placeholder="Salary here" @bind-Value="addEmployeeForm.Salary" />
+                            <label for="floatingInput">Salary</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputSelect shadow rounded id="floatingInput" placeholder="Employee here" @bind-Value="addEmployeeForm.Type" class="form-select">
+                                @foreach (EmployeeType type in Enum.GetValues(typeof(EmployeeType)))
+                                {
+                                    <option value="@type">@type.GetDisplayName()</option>
+                                }
+                            </InputSelect>
+                            <label for="floatingInput">Employment Type</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputSelect shadow rounded id="floatingInput" placeholder="Role here" @bind-Value="addEmployeeForm.Role" class="form-select">
+                                @foreach (Roles role in Enum.GetValues(typeof(Roles)))
+                                {
+                                    <option value="@role">@role.GetDisplayName()</option>
+                                }
+                            </InputSelect>
+                            <label for="floatingInput">Role</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <InputText class="form-control" id="floatingInput" placeholder="Avatar Url" @bind-Value="addEmployeeForm.Avatar" />
+                            <label for="floatingInput">Avatar Url</label>
+                        </div>
+                    </p>
+                    <button class="btn btn-outline-secondary" type="submit">Submit</button>
+                </EditForm>
+            </div>
+        </div>
+    </Card>
+}
+
+@code {
+    [Inject] private IEmployeeService employeeService { get; set; }
+    [Inject] private NavigationManager navigationManager { get; set; }
+
+    private bool showWarning = false;
+    private string Warning_Message = "";
+    private WarningType Warning_Type;
+
+    private Employee addEmployeeForm = new();
+
+    private async Task AddNewEmployee()
+    {
+        var response = await employeeService.AddEmployee(addEmployeeForm);
+        Warning_Type = response.StatusCode == 200 ? WarningType.Success : WarningType.Error;
+        Warning_Message = response.Message;
+        showWarning = true;
+    }
+
+    private void DismissWarning()
+    {
+
+        showWarning = false;
+        navigationManager.NavigateTo("/");
+    }
+}

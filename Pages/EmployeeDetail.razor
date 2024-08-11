@@ -1,0 +1,237 @@
+﻿@page "/employee/{employeeID:int}"
+@using BlazorUserManagerApp.Models
+@using BlazorUserManagerApp.Services
+@using Microsoft.AspNetCore.Identity
+@using System.Text.RegularExpressions
+@using static BlazorUserManagerApp.Components.Warning
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+
+
+
+@if (showWarning)
+{
+    <Warning OnClickCallback="DismissWarning" Type=@Warning_Type Message="@Warning_Message"/>
+}
+else
+{
+    <Card>
+        <div class="row user-detail-row">
+            <h3>@(addEmployeeForm.ChangePaswword ? "Change Password" : "Edit Employees")</h3>
+            <div class="form-group">
+                @if (addEmployeeForm.ChangePaswword)
+                {
+                    <EditForm Model="@addEmployeeForm" OnValidSubmit="ChangeMyPassword">
+                        <DataAnnotationsValidator />
+                        <div class="form-floating mb-3">
+                            <InputText type="password" class="form-control" id="floatingInput" placeholder="New Password here" @bind-Value="addEmployeeForm.PasswordHash" />
+                            <label for="floatingInput">New Password</label>
+                        </div>
+
+                        
+
+                        <div class="form-floating mb-3">
+                            <InputText type="password" class="form-control" id="floatingInput" placeholder="Confirm New Password here" @bind-Value="ConfirmPassword" />
+                            <label for="floatingInput">Confirm New Password</label>
+                        </div>
+
+                        @if (addEmployeeForm.PasswordHash != null)
+                        {
+                            <div>
+                                <label class="text-@(addEmployeeForm.PasswordHash == ConfirmPassword?"secondary":"danger")">Password and Confirm Are @(addEmployeeForm.PasswordHash == ConfirmPassword ? "" : "NOT") the same</label>
+                            </div>
+                            <div>
+                                <label class="text-@(Regex.IsMatch(addEmployeeForm.PasswordHash, "^(?=.*[A-Za-z])")?"secondary":"danger")">Password @(Regex.IsMatch(addEmployeeForm.PasswordHash, "^(?=.*[A-Za-z])") ? "contains" : "MUST CONTAIN") at least one Alphabetic character</label>
+                            </div>
+                            <div>
+                                <label class="text-@(Regex.IsMatch(addEmployeeForm.PasswordHash,"(?=.*?[0-9])")?"secondary":"danger")">Password @(Regex.IsMatch(addEmployeeForm.PasswordHash, "(?=.*?[0-9])") ? "contains" : "MUST CONTAIN") at least one number</label>
+                            </div>
+                            <div>
+                                <label class="text-@(Regex.IsMatch(addEmployeeForm.PasswordHash,"(?=.*?[#?!@$%^&*-])")?"secondary":"danger")">Password @(Regex.IsMatch(addEmployeeForm.PasswordHash, "(?=.*?[#?!@$%^&*-])") ? "contains" : "MUST CONTAIN") at least one special character</label>
+                            </div>
+                            <div>
+                                <label class="text-@(addEmployeeForm.PasswordHash.Length>8 && addEmployeeForm.PasswordHash.Length<16?"secondary":"danger")">Password @(addEmployeeForm.PasswordHash.Length > 8 && addEmployeeForm.PasswordHash.Length < 16 ? "is" : "MUST BE") between 8 and 16 characters</label>
+                            </div>
+                        }
+
+                        <div>
+
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+
+                    </EditForm>
+                    
+                }
+                else
+                {
+                    <EditForm Model="@addEmployeeForm" OnValidSubmit="EditEmployee">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <p>
+                            <div class="form-floating mb-3">
+                                <InputText class="form-control" id="floatingInput" placeholder="Name here" @bind-Value="addEmployeeForm.FullName" />
+                                <label for="floatingInput">Name</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <InputText class="form-control" id="floatingInput" placeholder="UserName here" @bind-Value="addEmployeeForm.UserName" />
+                                <label for="floatingInput">UserName</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <InputText class="form-control" id="floatingInput" placeholder="E-Mail here" @bind-Value="addEmployeeForm.Email" />
+                                <label for="floatingInput">E-Mail</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <InputNumber class="form-control" id="floatingInput" placeholder="Salary here" @bind-Value="addEmployeeForm.Salary" />
+                                <label for="floatingInput">Salary</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <InputSelect shadow rounded id="floatingInput" placeholder="Employee here" @bind-Value="addEmployeeForm.Type" class="form-select">
+                                    @foreach (EmployeeType type in Enum.GetValues(typeof(EmployeeType)))
+                                    {
+                                        <option value="@type">@type.GetDisplayName()</option>
+                                    }
+                                </InputSelect>
+                                <label for="floatingInput">Employment Type</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <InputSelect shadow rounded id="floatingInput" placeholder="Position here" @bind-Value="addEmployeeForm.Role" class="form-select">
+                                    @foreach (Roles position in Enum.GetValues(typeof(Roles)))
+                                    {
+                                        <option value="@position">@position.GetDisplayName()</option>
+                                    }
+                                </InputSelect>
+                                <label for="floatingInput">Position</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <InputText class="form-control" id="floatingInput" placeholder="Img here" @bind-Value="addEmployeeForm.Avatar" />
+                                <label for="floatingInput">Image Url</label>
+                            </div>
+                        </p>
+                        <button class="btn btn-outline-secondary" type="submit">Update</button>
+                        <div class="btn btn-danger" typeof="button" onclick="@showDeleteConfirmationModal">Delete</div>
+                        @if (currentUser == employee?.UserName)
+                        {
+                            <div class="btn btn-danger mx-1" typeof="button" onclick="@ChangePassword">Change Password</div>
+                        }
+                        else
+                        {
+                            <div class="btn btn-danger mx-1" typeof="button" onclick="@ResetPassword">Reset Password</div>
+                        }
+                    </EditForm>
+                }
+                
+            </div>
+        </div>
+    </Card>
+}
+
+@if (showDeleteModal)
+{
+    <DeleteConfirmationModal>
+        <p class="text-danger">Are You Sure You Want To Delete This Employee?</p>
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-primary me-1" onclick="@DeleteEmployee" type="button">CONFIRM</button>
+            <button class="btn btn-danger" onclick="@CancelDelete" type="button">Cancel</button>
+        </div>
+    </DeleteConfirmationModal>
+}
+
+@code {
+
+    [Parameter] public int employeeID { get; set; }
+
+    [Inject] private IEmployeeService employeeService { get; set; }
+    [Inject] private NavigationManager navigationManager { get; set; }
+
+
+
+    private Employee addEmployeeForm = new();
+    //private ChangePasswordModel changePasswordForm = new();
+    private bool showDeleteModal = false;
+    private bool showWarning = false;
+    private string Warning_Message = "";
+    private WarningType Warning_Type;
+    private Employee employee;
+    private string currentUser;
+    private string ConfirmPassword;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser =GetAuthenticationStateAsync.GetAuthenticationStateAsync().Result.User.Identity.Name;
+
+
+        var response = await employeeService.GetEmployeeFromId(employeeID);
+        employee = response.Employee;
+
+        addEmployeeForm.Salary = employee.Salary;
+        addEmployeeForm.FullName = employee.FullName;
+        addEmployeeForm.Type = employee.Type;
+        addEmployeeForm.Role = employee.Role;
+        addEmployeeForm.Avatar = employee.Avatar;
+        addEmployeeForm.UserName = employee.UserName;
+        addEmployeeForm.Email = employee.Email;
+
+    }
+
+    private async Task EditEmployee()
+    {
+        employee.Salary = addEmployeeForm.Salary;
+        employee.FullName = addEmployeeForm.FullName;
+        employee.Type = addEmployeeForm.Type;
+        employee.Role = addEmployeeForm.Role;
+        employee.Avatar = addEmployeeForm.Avatar;
+        employee.UserName = addEmployeeForm.UserName;
+        employee.Email = addEmployeeForm.Email;
+
+
+        var response = await employeeService.UpdateEmployee(employee);
+        Warning_Type = response.StatusCode == 200 ? WarningType.Success : WarningType.Error;
+        Warning_Message = response.Message;
+        showWarning = true;
+    }
+
+    private async Task DeleteEmployee()
+    {
+        employee.Salary = addEmployeeForm.Salary;
+        employee.FullName = addEmployeeForm.FullName;
+        employee.Type = addEmployeeForm.Type;
+        employee.Role = addEmployeeForm.Role;
+        employee.Avatar = addEmployeeForm.Avatar;
+        employee.UserName = addEmployeeForm.UserName;
+        employee.Email = addEmployeeForm.Email;
+
+
+
+        var response = await employeeService.DeleteEmployee(employee);
+        Warning_Type = response.StatusCode == 200 ? WarningType.Success : WarningType.Error;
+        Warning_Message = response.Message;
+        showDeleteModal = false;
+        showWarning = true;
+    }
+
+    private void showDeleteConfirmationModal() => showDeleteModal = true;
+    private void CancelDelete() => showDeleteModal = false;
+
+    private void DismissWarning()
+    {
+
+        showWarning = false;
+        navigationManager.NavigateTo("/");
+    }
+
+    private  void ResetPassword()
+    {
+        employeeService.ResetPassword(employee,"Password123!");
+        navigationManager.NavigateTo("/");
+    }
+
+    private void ChangePassword() => addEmployeeForm.ChangePaswword = true;
+    private async void ChangeMyPassword()
+    {
+        if (addEmployeeForm.PasswordHash == ConfirmPassword && Regex.IsMatch(ConfirmPassword, "^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}"))
+        {
+            await employeeService.ResetPassword(employee, addEmployeeForm.PasswordHash);
+            addEmployeeForm.ChangePaswword = false;
+        }
+    }
+
+}

@@ -1,0 +1,174 @@
+﻿@page "/employees"
+@using BlazorUserManagerApp.Models
+@using BlazorUserManagerApp.Services
+@using BlazorUserManagerApp.Components
+@using static BlazorUserManagerApp.Components.Warning
+@inject NavigationManager navigationManager
+
+<h3>EmployeesTable</h3>
+
+@if (showWarning)
+{
+    <Warning OnClickCallback="DismissWarning" Type=@Warning_Type Message="@Warning_Message" />
+}
+
+@if (Employees != null)
+{
+    <Card>
+        <div class="table-responsive">
+            <div class="form-floating mb-3">
+                <input oninput="@FilterEmployees" type="text" class="form-control" id="floatingInput" placeholder="Search Employees" />
+                <label for="floatingInput">Search by Name</label>
+            </div>
+            <table class="table table-borderless mb-0">
+                <tbody>
+                    @foreach (var employee in Employees)
+                    {
+                        <tr class="shadow-lg m-1 employee-row mb-5">
+                            <td class="centered-cell"><img class="round-image" width="60" src="@employee.Avatar" /></td>
+                            <td>
+                                <div class="pt-2">
+                                    <div class="employee-name centered-subdiv">@employee.FullName</div>
+                                    <div class="employee-position centered-subdiv">@employee.Role</div>
+                                </div>
+                            </td>
+                            <td class="centered-cell @GetEmployeeTypeStyle(@employee.Type)">@employee.Type</td>
+                            <td class="centered-cell employee-salary">@employee.Salary</td>
+                            <td class="centered-cell">
+                                <TableButton OnClickCallback="@(()=>NavigateToEmployeeDetail(Int32.Parse(employee.Id)))" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </Card>
+}
+
+
+@code {
+    [Inject] private IEmployeeService EmployeeService { get; set; }
+
+    private List<Employee>? Employees;
+    private List<Employee>? ConstEmployees;
+
+
+    private bool showWarning = false;
+    private string Warning_Message = "";
+    private WarningType Warning_Type;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await EmployeeService.GetEmployees();
+
+        if(response.StatusCode == 500)
+        {
+            showWarning = true;
+            Warning_Message = response.Message;
+        }
+        else
+        {
+            Employees = response.Employees;
+            ConstEmployees = response.Employees;
+        }
+
+    }
+
+    private string GetEmployeeTypeStyle(EmployeeType employeeType) => employeeType switch
+    {
+        EmployeeType.Freelance => "freelance",
+        EmployeeType.FullTime => "full-time",
+        EmployeeType.PartTime => "part-time",
+        EmployeeType.Casual => "casual"
+    };
+
+    private void NavigateToEmployeeDetail(int employeeID)  {
+        navigationManager.NavigateTo($"/employee/{employeeID}");
+
+    }
+
+    private void DismissWarning()
+    {
+
+        showWarning = false;
+        navigationManager.NavigateTo("/");
+    }
+
+    private void FilterEmployees(ChangeEventArgs e)
+    {
+        Employees = ConstEmployees;
+        Employees = Employees?.Where(x => x.FullName.IndexOf(e?.Value?.ToString() ?? "",StringComparison.OrdinalIgnoreCase) >=0).ToList();
+    }
+
+
+}
+
+
+<style>
+    html,
+    body,
+    .intro {
+        height: 100%;
+    }
+
+    table td,
+    table th {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .table {
+        border-spacing: 0 20px;
+    }
+
+    .card {
+        border-radius: .5rem;
+    }
+
+    .round-image {
+        border-radius: 50%;
+    }
+
+    .employee-name {
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .employee-salary {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .centered-cell {
+        height: 80px;
+        width: 160px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .centered-subdiv {
+        height: 25px;
+        vertical-align: middle;
+    }
+
+    .part-time {
+        color: white;
+        background-color: darkred !important;
+    }
+
+    .full-time {
+        color: white;
+        background-color: darkblue !important;
+    }
+
+    .casual {
+        color: white;
+        background-color: darkgreen !important;
+    }
+
+    .freelance {
+        color: white;
+        background-color: darkmagenta !important;
+    }
+</style>

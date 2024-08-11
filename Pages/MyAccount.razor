@@ -1,0 +1,31 @@
+﻿@page "/"
+@using BlazorUserManagerApp.Models
+@using BlazorUserManagerApp.Services
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+@inject NavigationManager navigationManager
+
+@code {
+    [Inject] private IEmployeeService employeeService { get; set; }
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        var response = await employeeService.GetEmployeeFromUsername(user.Identity.Name);
+        if(response.Employee != null)
+        {
+            NavigateToEmployeeDetail(Int32.Parse(response.Employee.Id));
+        }
+        else
+        {
+            navigationManager.NavigateTo("/Identity/Account/Login");
+        }
+    }
+
+    private void NavigateToEmployeeDetail(int employeeID)
+    {
+        navigationManager.NavigateTo($"/employee/{employeeID}");
+
+    }
+}

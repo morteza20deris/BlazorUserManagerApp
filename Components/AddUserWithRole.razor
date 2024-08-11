@@ -1,0 +1,111 @@
+﻿@using BlazorUserManagerApp.Data
+@using BlazorUserManagerApp.Models
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using System.Security.Claims
+@inject IJSRuntime JsRuntime
+@inject UserManager<IdentityUser> _userManager
+@inject SignInManager<IdentityUser> _signInManager
+
+
+<EditForm Model="newUser" OnValidSubmit="@AddUserWithRoleToDB">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group row">
+        <label for="login" class="col-sm-2 col-form-label">Add User</label>
+        <div class="col-sm-10">
+            <InputText id="login" @bind-Value="newUser.UserName"></InputText>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label for="role-select" class="col-sm-2 col-form-label">Assign Role</label>
+        <div class="col-sm-10">
+            <InputSelect id="role-select" @bind-Value="newUser.Role">
+                @foreach (var role in selectList)
+                {
+                    <option value="@role.Value" selected="@role.Selected">@role.Text</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label for="password" class="col-sm-2 col-form-label">Password</label>
+        <div class="col-sm-10">
+            <InputText id="password" @bind-Value="newUser.PasswordHash"></InputText>
+        </div>
+
+    </div>
+
+    <input type="submit" class="btn btn-primary" value="Save" />
+</EditForm>
+
+@code {
+    Employee newUser = new Employee();
+    List<SelectListItem> selectList = new List<SelectListItem>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var roles = Enum.GetValues(typeof(Roles));
+
+        for (int i = 0; i < roles.Length; i++)
+        {
+            if (i == 0)
+            {
+                selectList.Add(new SelectListItem()
+                    {
+                        Text = roles.GetValue(i).ToString(),
+                        Value = roles.GetValue(i).ToString(),
+                        Selected = true,
+                    });
+            }
+            else
+            {
+                selectList.Add(new SelectListItem()
+                    {
+                        Text = roles.GetValue(i).ToString(),
+                        Value = roles.GetValue(i).ToString(),
+                        Selected = false
+                    });
+            }
+        }
+    }
+
+
+    public async void AddUserWithRoleToDB(EditContext context)
+    {
+        var userModel = context.Model as Employee;
+
+        var user = new Employee { UserName = userModel?.UserName, Email = userModel?.Email, EmailConfirmed = true };
+
+        var messagePrompt = "Failed";
+
+        var result = await _userManager.CreateAsync(user, userModel.PasswordHash);
+
+        var roles = Enum.GetValues(typeof(Roles));
+
+        if (result.Succeeded)
+        {
+            messagePrompt = "User Added";
+            
+            //var getRoleFromList = roles.FirstOrDefault(x => x == userModel?.Role.GetDisplayName());
+            var roleAddedResult = await _userManager.AddToRoleAsync(user, userModel.Role.GetDisplayName() ?? "User");
+
+            if (roleAddedResult.Succeeded)
+            {
+                messagePrompt += "\nRole Added";
+            }
+
+            var claimAddedResult = await _userManager.AddClaimAsync(user, new Claim(userModel.Role.GetDisplayName() ?? "User", userModel.Role.GetDisplayName() ?? ""));
+            if (claimAddedResult.Succeeded)
+            {
+                messagePrompt += "\nClaim Added";
+            }
+        }
+
+        await JsRuntime.InvokeVoidAsync("alert", messagePrompt);
+    }
+
+}

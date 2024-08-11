@@ -1,0 +1,33 @@
+﻿@inherits LayoutComponentBase
+
+<PageTitle>Blazor User Manager</PageTitle>
+
+<div class="page">
+    <AuthorizeView>
+        <Authorized>
+            <div class="sidebar">
+                <NavMenu />
+            </div>
+            <main>
+                <div class="top-row px-4">
+                    <NavLink  href="https://docs.microsoft.com/aspnet/" target="_blank">About</NavLink>
+                    <NavLink  href="identity/account/logout" >
+                        Logout
+                    </NavLink>
+                </div>
+
+
+                <article class="content px-4">
+                    @Body
+                </article>
+            </main>
+        </Authorized>
+        <NotAuthorized>
+            <RedirectToLogin/>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    
+
+    
+</div>
