@@ -169,6 +169,7 @@ else
         addEmployeeForm.Avatar = employee.Avatar;
         addEmployeeForm.UserName = employee.UserName;
         addEmployeeForm.Email = employee.Email;
+        addEmployeeForm.ChangePaswword = employee.ChangePaswword;
 
     }
 
@@ -218,9 +219,11 @@ else
         navigationManager.NavigateTo("/");
     }
 
-    private  void ResetPassword()
+    private async void ResetPassword()
     {
-        employeeService.ResetPassword(employee,"Password123!");
+        employee.ChangePaswword = true;
+        var updateRes = await employeeService.UpdateEmployee(employee);
+        var resetRes = await employeeService.ResetPassword(employee,"Password123!");
         navigationManager.NavigateTo("/");
     }
 
@@ -229,6 +232,7 @@ else
     {
         if (changePasswordForm.PasswordHash == ConfirmPassword && Regex.IsMatch(ConfirmPassword, "^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}"))
         {
+            
             await employeeService.ResetPassword(employee, changePasswordForm.PasswordHash);
             addEmployeeForm.ChangePaswword = false;
         }
