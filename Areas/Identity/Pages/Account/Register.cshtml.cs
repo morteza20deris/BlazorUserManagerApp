@@ -40,7 +40,7 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
                 
                 if (result.Succeeded)
                 {
-                    //await _signInManager.SignInAsync(identity, isPersistent: false);
+                    await _signInManager.SignInAsync(identity, isPersistent: false);
                     return LocalRedirect("~/");
                 }
             }

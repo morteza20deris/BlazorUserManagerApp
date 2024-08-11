@@ -28,7 +28,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.Password.RequireNonAlphanumeric = false;
     options.SignIn.RequireConfirmedEmail = false;
 })
-    .AddEntityFrameworkStores<DataContext>().AddRoles<IdentityRole>();
+    .AddEntityFrameworkStores<DataContext>().AddDefaultTokenProviders().AddRoles<IdentityRole>();
 
 var app = builder.Build();
 

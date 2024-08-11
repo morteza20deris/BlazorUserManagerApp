@@ -20,10 +20,10 @@ else
             <div class="form-group">
                 @if (addEmployeeForm.ChangePaswword)
                 {
-                    <EditForm Model="@addEmployeeForm" OnValidSubmit="ChangeMyPassword">
+                    <EditForm Model="@changePasswordForm" OnValidSubmit="ChangeMyPassword">
                         <DataAnnotationsValidator />
                         <div class="form-floating mb-3">
-                            <InputText type="password" class="form-control" id="floatingInput" placeholder="New Password here" @bind-Value="addEmployeeForm.PasswordHash" />
+                            <InputText type="password" class="form-control" id="floatingInput" placeholder="New Password here" @bind-Value="changePasswordForm.PasswordHash" />
                             <label for="floatingInput">New Password</label>
                         </div>
 
@@ -34,22 +34,22 @@ else
                             <label for="floatingInput">Confirm New Password</label>
                         </div>
 
-                        @if (addEmployeeForm.PasswordHash != null)
+                        @if (changePasswordForm.PasswordHash != null)
                         {
                             <div>
-                                <label class="text-@(addEmployeeForm.PasswordHash == ConfirmPassword?"secondary":"danger")">Password and Confirm Are @(addEmployeeForm.PasswordHash == ConfirmPassword ? "" : "NOT") the same</label>
+                                <label class="text-@(changePasswordForm.PasswordHash == ConfirmPassword?"secondary":"danger")">Password and Confirm Are @(changePasswordForm.PasswordHash == ConfirmPassword ? "" : "NOT") the same</label>
                             </div>
                             <div>
-                                <label class="text-@(Regex.IsMatch(addEmployeeForm.PasswordHash, "^(?=.*[A-Za-z])")?"secondary":"danger")">Password @(Regex.IsMatch(addEmployeeForm.PasswordHash, "^(?=.*[A-Za-z])") ? "contains" : "MUST CONTAIN") at least one Alphabetic character</label>
+                                <label class="text-@(Regex.IsMatch(changePasswordForm.PasswordHash, "^(?=.*[A-Za-z])")?"secondary":"danger")">Password @(Regex.IsMatch(changePasswordForm.PasswordHash, "^(?=.*[A-Za-z])") ? "contains" : "MUST CONTAIN") at least one Alphabetic character</label>
                             </div>
                             <div>
-                                <label class="text-@(Regex.IsMatch(addEmployeeForm.PasswordHash,"(?=.*?[0-9])")?"secondary":"danger")">Password @(Regex.IsMatch(addEmployeeForm.PasswordHash, "(?=.*?[0-9])") ? "contains" : "MUST CONTAIN") at least one number</label>
+                                <label class="text-@(Regex.IsMatch(changePasswordForm.PasswordHash,"(?=.*?[0-9])")?"secondary":"danger")">Password @(Regex.IsMatch(changePasswordForm.PasswordHash, "(?=.*?[0-9])") ? "contains" : "MUST CONTAIN") at least one number</label>
                             </div>
                             <div>
-                                <label class="text-@(Regex.IsMatch(addEmployeeForm.PasswordHash,"(?=.*?[#?!@$%^&*-])")?"secondary":"danger")">Password @(Regex.IsMatch(addEmployeeForm.PasswordHash, "(?=.*?[#?!@$%^&*-])") ? "contains" : "MUST CONTAIN") at least one special character</label>
+                                <label class="text-@(Regex.IsMatch(changePasswordForm.PasswordHash,"(?=.*?[#?!@$%^&*-])")?"secondary":"danger")">Password @(Regex.IsMatch(changePasswordForm.PasswordHash, "(?=.*?[#?!@$%^&*-])") ? "contains" : "MUST CONTAIN") at least one special character</label>
                             </div>
                             <div>
-                                <label class="text-@(addEmployeeForm.PasswordHash.Length>8 && addEmployeeForm.PasswordHash.Length<16?"secondary":"danger")">Password @(addEmployeeForm.PasswordHash.Length > 8 && addEmployeeForm.PasswordHash.Length < 16 ? "is" : "MUST BE") between 8 and 16 characters</label>
+                                <label class="text-@(changePasswordForm.PasswordHash.Length>8 && changePasswordForm.PasswordHash.Length<16?"secondary":"danger")">Password @(changePasswordForm.PasswordHash.Length > 8 && changePasswordForm.PasswordHash.Length < 16 ? "is" : "MUST BE") between 8 and 16 characters</label>
                             </div>
                         }
 
@@ -145,7 +145,7 @@ else
 
 
     private Employee addEmployeeForm = new();
-    //private ChangePasswordModel changePasswordForm = new();
+    private ChangePasswordModel changePasswordForm = new();
     private bool showDeleteModal = false;
     private bool showWarning = false;
     private string Warning_Message = "";
@@ -227,9 +227,9 @@ else
     private void ChangePassword() => addEmployeeForm.ChangePaswword = true;
     private async void ChangeMyPassword()
     {
-        if (addEmployeeForm.PasswordHash == ConfirmPassword && Regex.IsMatch(ConfirmPassword, "^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}"))
+        if (changePasswordForm.PasswordHash == ConfirmPassword && Regex.IsMatch(ConfirmPassword, "^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}"))
         {
-            await employeeService.ResetPassword(employee, addEmployeeForm.PasswordHash);
+            await employeeService.ResetPassword(employee, changePasswordForm.PasswordHash);
             addEmployeeForm.ChangePaswword = false;
         }
     }
