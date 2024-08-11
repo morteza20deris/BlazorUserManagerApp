@@ -1,6 +1,5 @@
 ﻿using BlazorUserManagerApp.Models;
 using Bogus;
-using Bogus.DataSets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -45,10 +44,12 @@ public class DataContext : IdentityDbContext
                 FullName = faker.Name.FullName(),
                 Salary = GetRandomSalary(),
                 Type = GetRandomEmployeeType(),
-                Role = GetRole(10),
+                Role = GetRandomRole(),
                 Email = faker.Internet.Email(),
                 PhoneNumber = faker.Phone.PhoneNumber(),
-                Active = true
+                Active = true,
+                ChangePaswword = true,
+                
 
             };
             

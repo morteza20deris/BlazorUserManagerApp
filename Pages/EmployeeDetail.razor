@@ -243,6 +243,7 @@ else
         if (changePasswordForm.PasswordHash == ConfirmPassword && Regex.IsMatch(ConfirmPassword, "^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}"))
         {
             employee.ChangePaswword = false;
+            employee.LastPasswordChange = DateTime.Now;
             var updateRes = await employeeService.UpdateEmployee(employee);
             await employeeService.ResetPassword(employee, changePasswordForm.PasswordHash);
             navigationManager.NavigateTo("/");

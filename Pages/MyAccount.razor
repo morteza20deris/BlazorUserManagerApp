@@ -10,9 +10,18 @@
 
     protected async override Task OnInitializedAsync()
     {
+
         var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
         var user = authstate.User;
         var response = await employeeService.GetEmployeeFromUsername(user.Identity.Name);
+        Employee employee = response.Employee;
+        TimeSpan timeSincePasswordChange = DateTime.Now - employee.LastPasswordChange;
+        if(timeSincePasswordChange.Minutes > 1)
+        {
+            employee.ChangePaswword = true;
+            await employeeService.UpdateEmployee(employee);
+
+        }
         if(response.Employee != null && response.Employee.Active)
         {
             NavigateToEmployeeDetail(Int32.Parse(response.Employee.Id));

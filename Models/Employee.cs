@@ -19,6 +19,10 @@ public class Employee : IdentityUser
     [Required]
     public Roles Role { get; set; }
 
+    [Required]
+    [DataType(DataType.DateTime)]
+    public DateTime LastPasswordChange { get; set; }
+
     public bool ChangePaswword { get; set; }
     //[Required(ErrorMessage ="Password is required")]
     //[DataType(DataType.Password)]
@@ -52,38 +56,14 @@ public enum EmployeeType
 
 public enum Roles
 {
-    [Display(Name = "CEO")]
-    CEO,
+    [Display(Name = "Admin")]
+    Admin,
 
-    [Display(Name = "CFO")]
-    CFO,
+    [Display(Name = "Supervisor")]
+    Supervisor,
 
-    [Display(Name = "CTO")]
-    CTO,
-
-    [Display(Name = "Accountant")]
-    Accountant,
-
-    [Display(Name = "HR Manager")]
-    HRManager,
-
-    [Display(Name = "Marketing Manager")]
-    MarketingManager,
-
-    [Display(Name = "Sales Manager")]
-    SalesManager,
-
-    [Display(Name = "Software Engineer")]
-    SoftwareEngineer,
-
-    [Display(Name = "Data Analyst")]
-    DataAnalyst,
-
-    [Display(Name = "Customer Support")]
-    CustomerSupport,
-
-    [Display(Name = "New")]
-    New
+    [Display(Name = "Operator")]
+    Operator,
 }
 
 public static class EnumExtensions
