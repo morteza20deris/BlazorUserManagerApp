@@ -1,7 +1,10 @@
 using BlazorUserManagerApp.Models;
+using BlazorUserManagerApp.Services;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
@@ -11,7 +14,7 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
 
-        public RegisterModel(SignInManager<IdentityUser> signInManager, UserManager<IdentityUser> userManager)
+        public RegisterModel(SignInManager<IdentityUser> signInManager,UserManager<IdentityUser> userManager)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -19,24 +22,38 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
         }
 
         [BindProperty]
-        public inputModel Input { get; set; }
+        public InputModel Input { get; set; }
 
-        public class inputModel
+        public class InputModel
         {
             [Required]
             public string UserName { get; set; }
+            [Required(ErrorMessage = "Password is required")]
             [DataType(DataType.Password)]
-            [Required]
+            [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
+            [MaxLength(16, ErrorMessage = "Password must be at most 16 characters")]
+            [RegularExpression("^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}", ErrorMessage = "Invalid Password")]
             public string Password { get; set; }
+            [Required(ErrorMessage = "Password is required")]
+            [DataType(DataType.Password)]
+            [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
+            [MaxLength(16, ErrorMessage = "Password must be at most 16 characters")]
+            [RegularExpression("^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}", ErrorMessage = "Invalid Password")]
+            public string ConfirmPassword { get; set; }
+            [Required]
+            [EmailAddress]
+            public string EmailAddress { get; set; }
         }
 
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && Input.Password == Input.ConfirmPassword)
             {
-                var identity = new Employee { UserName = Input.UserName,Id=Input.UserName.GetHashCode().ToString() };
-                var result = await _userManager.CreateAsync(identity, Input.Password);
+                
+                var identity = new Employee { UserName=Input.UserName,Email=Input.EmailAddress,Id= Input.UserName.GetHashCode().ToString() ,Active=true}; 
+                
+                var result = await _userManager.CreateAsync(identity,Input.Password);
                 
                 if (result.Succeeded)
                 {

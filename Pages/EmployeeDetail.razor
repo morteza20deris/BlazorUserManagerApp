@@ -18,7 +18,7 @@ else
         <div class="row user-detail-row">
             <h3>@(addEmployeeForm.ChangePaswword ? "Change Password" : "Edit Employees")</h3>
             <div class="form-group">
-                @if (addEmployeeForm.ChangePaswword)
+                @if (addEmployeeForm.ChangePaswword && addEmployeeForm.UserName == currentUser)
                 {
                     <EditForm Model="@changePasswordForm" OnValidSubmit="ChangeMyPassword">
                         <DataAnnotationsValidator />
@@ -108,7 +108,7 @@ else
                         </p>
                         <button class="btn btn-outline-secondary" type="submit">Update</button>
                         <div class="btn btn-danger" typeof="button" onclick="@showDeleteConfirmationModal">Delete</div>
-                        @if (currentUser == employee?.UserName)
+                        @if (currentUser == addEmployeeForm?.UserName)
                         {
                             <div class="btn btn-danger mx-1" typeof="button" onclick="@ChangePassword">Change Password</div>
                         }
@@ -116,7 +116,15 @@ else
                         {
                             <div class="btn btn-danger mx-1" typeof="button" onclick="@ResetPassword">Reset Password</div>
                         }
-                    </EditForm>
+                        @if (addEmployeeForm.Active)
+                        {
+                            <div class="btn btn-danger mx-1" typeof="button" onclick="@ChangeActivationState">DeActivate User</div>
+                        }
+                        else
+                        {
+                            <div class="btn btn-danger mx-1" typeof="button" onclick="@ChangeActivationState">Activate User</div>
+                        }
+                        </EditForm>
                 }
                 
             </div>
@@ -170,6 +178,7 @@ else
         addEmployeeForm.UserName = employee.UserName;
         addEmployeeForm.Email = employee.Email;
         addEmployeeForm.ChangePaswword = employee.ChangePaswword;
+        addEmployeeForm.Active = employee.Active;
 
     }
 
@@ -182,6 +191,7 @@ else
         employee.Avatar = addEmployeeForm.Avatar;
         employee.UserName = addEmployeeForm.UserName;
         employee.Email = addEmployeeForm.Email;
+
 
 
         var response = await employeeService.UpdateEmployee(employee);
@@ -232,10 +242,18 @@ else
     {
         if (changePasswordForm.PasswordHash == ConfirmPassword && Regex.IsMatch(ConfirmPassword, "^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}"))
         {
-            
+            employee.ChangePaswword = false;
+            var updateRes = await employeeService.UpdateEmployee(employee);
             await employeeService.ResetPassword(employee, changePasswordForm.PasswordHash);
-            addEmployeeForm.ChangePaswword = false;
+            navigationManager.NavigateTo("/");
         }
+    }
+
+    private async void ChangeActivationState()
+    {
+        employee.Active = !employee.Active;
+        await employeeService.UpdateEmployee(employee);
+        navigationManager.NavigateTo("/");
     }
 
 }

@@ -6,6 +6,8 @@ namespace BlazorUserManagerApp.Models;
 
 public class Employee : IdentityUser
 {
+    [Required]
+    public bool Active { get; set; }
     
     [Required]
     public string FullName { get; set; }

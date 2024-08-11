@@ -13,9 +13,14 @@
         var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
         var user = authstate.User;
         var response = await employeeService.GetEmployeeFromUsername(user.Identity.Name);
-        if(response.Employee != null)
+        if(response.Employee != null && response.Employee.Active)
         {
             NavigateToEmployeeDetail(Int32.Parse(response.Employee.Id));
+        }
+        else if (response.Employee != null && !response.Employee.Active)
+        {
+            navigationManager.NavigateTo("/ContactAdmin");
+            
         }
         else
         {

@@ -10,7 +10,7 @@ namespace BlazorUserManagerApp.Services;
 public interface IEmployeeService
 {
     Task<GetAllEmployeesResponse> GetEmployees();
-    Task<BaseResponse> AddEmployee(Employee form);
+    Task<BaseResponse> AddEmployee(Employee employee);
     Task<GetEmployeeResponse> GetEmployeeFromId(int id);
     Task<GetEmployeeResponse> GetEmployeeFromUsername(string userName);
     Task<BaseResponse> DeleteEmployee(Employee employee);
@@ -97,22 +97,20 @@ public class EmployeeService : IEmployeeService
         var response = new BaseResponse();
         try
         {
-            using (var context = _factory.CreateDbContext())
+            using var context = _factory.CreateDbContext();
+            context.Remove(employee);
+
+            var result = await context.SaveChangesAsync();
+
+            if (result == 1)
             {
-                context.Remove(employee);
-
-                var result = await context.SaveChangesAsync();
-
-                if (result == 1)
-                {
-                    response.StatusCode = 200;
-                    response.Message = "Employee Removed succesfully";
-                }
-                else
-                {
-                    response.StatusCode = 400;
-                    response.Message = "Error accurred while Removing Employee";
-                }
+                response.StatusCode = 200;
+                response.Message = "Employee Removed succesfully";
+            }
+            else
+            {
+                response.StatusCode = 400;
+                response.Message = "Error accurred while Removing Employee";
             }
         }
         catch (Exception ex)
@@ -130,13 +128,11 @@ public class EmployeeService : IEmployeeService
 
         try
         {
-            using (var context = _factory.CreateDbContext())
-            {
-                var employee = await context.AspNetUsers.FirstOrDefaultAsync(x=>x.Id == id.ToString());
-                response.StatusCode = 200;
-                response.Message = "Success";
-                response.Employee = employee;
-            }
+            using var context = _factory.CreateDbContext();
+            var employee = await context.AspNetUsers.FirstOrDefaultAsync(x => x.Id == id.ToString());
+            response.StatusCode = 200;
+            response.Message = "Success";
+            response.Employee = employee;
         }
         catch (Exception ex)
         {
@@ -154,13 +150,11 @@ public class EmployeeService : IEmployeeService
 
         try
         {
-            using (var context = _factory.CreateDbContext())
-            {
-                var employee = await context.AspNetUsers.FirstOrDefaultAsync(x => x.UserName == userName);
-                response.StatusCode = 200;
-                response.Message = "Success";
-                response.Employee = employee;
-            }
+            using var context = _factory.CreateDbContext();
+            var employee = await context.AspNetUsers.FirstOrDefaultAsync(x => x.UserName == userName);
+            response.StatusCode = 200;
+            response.Message = "Success";
+            response.Employee = employee;
         }
         catch (Exception ex)
         {
@@ -177,13 +171,11 @@ public class EmployeeService : IEmployeeService
         var response = new GetAllEmployeesResponse();
         try
         {
-            using (var context = _factory.CreateDbContext())
-            {
-                var employees =await context.AspNetUsers.ToListAsync();
-                response.StatusCode = 200;
-                response.Message = "Success";
-                response.Employees = employees;
-            }
+            using var context = _factory.CreateDbContext();
+            var employees = await context.AspNetUsers.ToListAsync();
+            response.StatusCode = 200;
+            response.Message = "Success";
+            response.Employees = employees;
         }
         catch (Exception ex)
         {
@@ -222,22 +214,20 @@ public class EmployeeService : IEmployeeService
         var response = new BaseResponse();
         try
         {
-            using (var context = _factory.CreateDbContext())
+            using var context = _factory.CreateDbContext();
+            context.Update(employee);
+
+            var result = await context.SaveChangesAsync();
+
+            if (result == 1)
             {
-                context.Update(employee);
-
-                var result = await context.SaveChangesAsync();
-
-                if (result == 1)
-                {
-                    response.StatusCode = 200;
-                    response.Message = "Employee Updated succesfully";
-                }
-                else
-                {
-                    response.StatusCode = 400;
-                    response.Message = "Error accurred while Updating Employee";
-                }
+                response.StatusCode = 200;
+                response.Message = "Employee Updated succesfully";
+            }
+            else
+            {
+                response.StatusCode = 400;
+                response.Message = "Error accurred while Updating Employee";
             }
         }
         catch (Exception ex)

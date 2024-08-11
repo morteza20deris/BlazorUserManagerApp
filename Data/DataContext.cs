@@ -48,7 +48,8 @@ public class DataContext : IdentityDbContext
                 Role = GetRole(10),
                 Email = faker.Internet.Email(),
                 PhoneNumber = faker.Phone.PhoneNumber(),
-                
+                Active = true
+
             };
             
 

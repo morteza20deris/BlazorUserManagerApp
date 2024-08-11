@@ -1,3 +1,4 @@
+using BlazorUserManagerApp.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -9,10 +10,12 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
     {
 
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public LoginModel(SignInManager<IdentityUser> signInManager)
+        public LoginModel(SignInManager<IdentityUser> signInManager,UserManager<IdentityUser> userManager)
         {
             _signInManager = signInManager;
+            _userManager = userManager;
 
         }
 
@@ -26,6 +29,20 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     return LocalRedirect("~/");
+                }
+                else
+                {
+                    Employee user =await _userManager.FindByNameAsync(Input.UserName) as Employee;
+                    if (user != null && user.AccessFailedCount < 3)
+                    {
+                        await _userManager.AccessFailedAsync(user);
+
+                    }
+                    else if (user != null && user.AccessFailedCount >=3) {
+                        user.Active = false;
+                        await _userManager.UpdateAsync(user);
+                        
+                    }
                 }
             }
 

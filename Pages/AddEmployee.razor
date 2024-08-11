@@ -85,6 +85,7 @@ else
 
     private async Task AddNewEmployee()
     {
+        addEmployeeForm.Active = true;
         var response = await employeeService.AddEmployee(addEmployeeForm);
         Warning_Type = response.StatusCode == 200 ? WarningType.Success : WarningType.Error;
         Warning_Message = response.Message;
