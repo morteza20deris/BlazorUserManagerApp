@@ -27,6 +27,8 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
         public class InputModel
         {
             [Required]
+            [MinLength(3)]
+            [MaxLength(16)]
             public string UserName { get; set; }
             [Required(ErrorMessage = "Password is required")]
             [DataType(DataType.Password)]

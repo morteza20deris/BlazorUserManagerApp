@@ -21,6 +21,7 @@ builder.Services.AddAuthorization(options => {
     options.AddPolicy("UserPolicy", policy => policy.RequireClaim("User"));
 });
 
+
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = false;

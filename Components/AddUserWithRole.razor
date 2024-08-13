@@ -1,11 +1,10 @@
 ﻿@using BlazorUserManagerApp.Data
 @using BlazorUserManagerApp.Models
+@using BlazorUserManagerApp.Services
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Mvc.Rendering
 @using System.Security.Claims
 @inject IJSRuntime JsRuntime
-@inject UserManager<IdentityUser> _userManager
-@inject SignInManager<IdentityUser> _signInManager
 
 
 <EditForm Model="newUser" OnValidSubmit="@AddUserWithRoleToDB">
@@ -43,6 +42,7 @@
 </EditForm>
 
 @code {
+    [Inject] private IEmployeeService employeeService { get; set; }
     Employee newUser = new Employee();
     List<SelectListItem> selectList = new List<SelectListItem>();
 
@@ -78,31 +78,23 @@
     {
         var userModel = context.Model as Employee;
 
-        var user = new Employee { UserName = userModel?.UserName, Email = userModel?.Email, EmailConfirmed = true };
+        var user = new Employee { UserName = userModel?.UserName, Email = userModel?.Email, EmailConfirmed = true,Role=userModel.Role };
 
         var messagePrompt = "Failed";
 
-        var result = await _userManager.CreateAsync(user, userModel.PasswordHash);
+        var result = await employeeService.AddEmployee(user);
 
         var roles = Enum.GetValues(typeof(Roles));
 
-        if (result.Succeeded)
+        if (result.StatusCode == 200)
         {
             messagePrompt = "User Added";
-            
-            //var getRoleFromList = roles.FirstOrDefault(x => x == userModel?.Role.GetDisplayName());
-            var roleAddedResult = await _userManager.AddToRoleAsync(user, userModel.Role.GetDisplayName() ?? "User");
-
-            if (roleAddedResult.Succeeded)
-            {
-                messagePrompt += "\nRole Added";
-            }
-
-            var claimAddedResult = await _userManager.AddClaimAsync(user, new Claim(userModel.Role.GetDisplayName() ?? "User", userModel.Role.GetDisplayName() ?? ""));
-            if (claimAddedResult.Succeeded)
-            {
-                messagePrompt += "\nClaim Added";
-            }
+            messagePrompt += "\nRole Added";
+            messagePrompt += "\nClaim Added";
+        }
+        else
+        {
+            messagePrompt = result.Message;
         }
 
         await JsRuntime.InvokeVoidAsync("alert", messagePrompt);

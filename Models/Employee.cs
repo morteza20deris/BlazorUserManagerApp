@@ -11,6 +11,7 @@ public class Employee : IdentityUser
     
     [Required]
     public string FullName { get; set; }
+    
     public string Avatar { get; set; }
     [Required]
     public decimal Salary { get; set; }
