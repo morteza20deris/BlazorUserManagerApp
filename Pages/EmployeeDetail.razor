@@ -289,11 +289,23 @@ else
 
     private async void setEmployeeRole()
     {
-        var roleRes = await employeeService.setEmployeeToRole(employee, addEmployeeForm.Role);
-        if(roleRes.StatusCode == 200)
+        var getRoleUserCount = await employeeService.GetUserCountWithRole(addEmployeeForm.Role.GetDisplayName());
+        if(addEmployeeForm.Role == Roles.Admin && getRoleUserCount < 20)
         {
-            navigationManager.Refresh();
+            var roleRes = await employeeService.setEmployeeToRole(employee, addEmployeeForm.Role);
+            if (roleRes.StatusCode == 200)
+            {
+                navigationManager.Refresh();
+            }
+        }else if(addEmployeeForm.Role != Roles.Admin && getRoleUserCount <= 50)
+        {
+            var roleRes = await employeeService.setEmployeeToRole(employee, addEmployeeForm.Role);
+            if (roleRes.StatusCode == 200)
+            {
+                navigationManager.Refresh();
+            }
         }
+
 
 
 
