@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
 {
@@ -53,12 +54,15 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
             if (ModelState.IsValid && Input.Password == Input.ConfirmPassword)
             {
                 
-                var identity = new Employee { UserName=Input.UserName,Email=Input.EmailAddress,Id= Input.UserName.GetHashCode().ToString() ,Active=true}; 
+                var identity = new Employee { UserName=Input.UserName,Email=Input.EmailAddress,Id= Input.UserName.GetHashCode().ToString() ,Active=true,EmailConfirmed=true}; 
                 
                 var result = await _userManager.CreateAsync(identity,Input.Password);
                 
                 if (result.Succeeded)
                 {
+                    var user =await _userManager.FindByNameAsync(Input.UserName);
+                    var roleRes = await _userManager.AddToRoleAsync(user, "Admin");
+                    var claimRes = await _userManager.AddClaimAsync(user, new Claim("Admin", "Admin"));
                     await _signInManager.SignInAsync(identity, isPersistent: false);
                     return LocalRedirect("~/");
                 }

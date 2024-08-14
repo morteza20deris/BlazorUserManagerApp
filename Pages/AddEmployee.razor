@@ -3,6 +3,7 @@
 @using BlazorUserManagerApp.Services
 @using static BlazorUserManagerApp.Components.Warning
 <h3>AddEmployee</h3>
+@attribute [Authorize(Roles="Admin")]
 
 @if (showWarning)
 {
@@ -11,7 +12,7 @@
 else
 {
     
-    <Card>
+    <UICard>
         <div class="row user-detail-row">
             <h3>Add New Employee</h3>
             <div class="form-group">
@@ -24,7 +25,7 @@ else
                             <label for="floatingInput">Full Name</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <InputText class="form-control" id="floatingInput" placeholder="UserName here" @bind-Value="addEmployeeForm.UserName" />
+                            <InputText class="form-control" id="floatingInput" minlength="3" maxlength="32" placeholder="UserName here" @bind-Value="addEmployeeForm.UserName" />
                             <label for="floatingInput">UserName</label>
                         </div>
                         <div class="form-floating mb-3">
@@ -70,7 +71,7 @@ else
                 </EditForm>
             </div>
         </div>
-    </Card>
+    </UICard>
 }
 
 @code {

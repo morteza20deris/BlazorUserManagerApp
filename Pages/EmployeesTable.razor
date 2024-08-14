@@ -4,7 +4,11 @@
 @using BlazorUserManagerApp.Components
 @using static BlazorUserManagerApp.Components.Warning
 @inject NavigationManager navigationManager
-
+@using BlazorUserManagerApp.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using System.Security.Claims
+@attribute [ Authorize(Roles = "Admin")]
 <h3>EmployeesTable</h3>
 
 @if (showWarning)
@@ -14,7 +18,7 @@
 
 @if (Employees != null)
 {
-    <Card>
+    <UICard>
         <div class="table-responsive">
             <div class="form-floating mb-3">
                 <input oninput="@FilterEmployees" type="text" class="form-control" id="floatingInput" placeholder="Search Employees" />
@@ -42,7 +46,7 @@
                 </tbody>
             </table>
         </div>
-    </Card>
+    </UICard>
 }
 
 
@@ -97,7 +101,7 @@
     private void FilterEmployees(ChangeEventArgs e)
     {
         Employees = ConstEmployees;
-        Employees = Employees?.Where(x => x.FullName.IndexOf(e?.Value?.ToString() ?? "",StringComparison.OrdinalIgnoreCase) >=0).ToList();
+        Employees = Employees?.Where(x => x.FullName?.IndexOf(e?.Value?.ToString() ?? "",StringComparison.OrdinalIgnoreCase) >=0).ToList();
     }
 
 

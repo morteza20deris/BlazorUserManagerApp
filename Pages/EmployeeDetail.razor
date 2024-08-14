@@ -4,8 +4,11 @@
 @using Microsoft.AspNetCore.Identity
 @using System.Text.RegularExpressions
 @using static BlazorUserManagerApp.Components.Warning
+@using BlazorUserManagerApp.Data
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using System.Security.Claims
 @inject AuthenticationStateProvider GetAuthenticationStateAsync
-
+@attribute [Authorize(Roles = "Admin")]
 
 
 @if (showWarning)
@@ -14,7 +17,7 @@
 }
 else
 {
-    <Card>
+    <UICard>
         <div class="row user-detail-row">
             <h3>@(addEmployeeForm.ChangePaswword ? "Change Password" : "Edit Employees")</h3>
             <div class="form-group">
@@ -151,7 +154,7 @@ else
                 
             </div>
         </div>
-    </Card>
+    </UICard>
 }
 
 @if (showDeleteModal)

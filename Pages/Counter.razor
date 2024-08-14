@@ -1,4 +1,6 @@
 ﻿@page "/counter"
+@using BlazorUserManagerApp.Models
+@attribute [Authorize]
 
 <PageTitle>Counter</PageTitle>
 
@@ -7,7 +9,6 @@
 <p role="status">Current count: @currentCount</p>
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
-
 @code {
     private int currentCount = 0;
 

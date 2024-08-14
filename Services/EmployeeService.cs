@@ -60,7 +60,7 @@ public class EmployeeService : IEmployeeService
                 Type = employee.Type,
                 ChangePaswword = true
 
-            };
+            } ;
             
 
             var result = await _userManager.CreateAsync(identity, employee.PasswordHash);

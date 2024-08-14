@@ -10,8 +10,10 @@ public class Employee : IdentityUser
     public bool Active { get; set; }
     
     [Required]
+    [MinLength(3)]
+    [MaxLength(32)]
     public string FullName { get; set; }
-    
+    [DataType(DataType.Url)]
     public string Avatar { get; set; }
     [Required]
     public decimal Salary { get; set; }
@@ -25,14 +27,9 @@ public class Employee : IdentityUser
     public DateTime LastPasswordChange { get; set; }
 
     public bool ChangePaswword { get; set; }
-    //[Required(ErrorMessage ="Password is required")]
-    //[DataType(DataType.Password)]
-    //[MinLength(8,ErrorMessage ="Password must be at least 8 characters")]
-    //[MaxLength(16, ErrorMessage = "Password must be at most 16 characters")]
-    //[RegularExpression("^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}",ErrorMessage ="Invalid Password")]
-    //public override string PasswordHash { get; set; }
     
-    
+
+
 
 
 

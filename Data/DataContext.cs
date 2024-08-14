@@ -49,7 +49,7 @@ public class DataContext : IdentityDbContext
                 PhoneNumber = faker.Phone.PhoneNumber(),
                 Active = true,
                 ChangePaswword = true,
-                
+                EmailConfirmed = true
 
             };
             

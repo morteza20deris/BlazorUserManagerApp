@@ -1,8 +1,14 @@
 ﻿@page "/"
 @using BlazorUserManagerApp.Models
+@using BlazorUserManagerApp.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using System.Security.Claims
 @using BlazorUserManagerApp.Services
 @inject AuthenticationStateProvider GetAuthenticationStateAsync
 @inject NavigationManager navigationManager
+@attribute [Authorize(Roles = "Admin")]
+
 
 @code {
     [Inject] private IEmployeeService employeeService { get; set; }
