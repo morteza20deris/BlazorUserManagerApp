@@ -80,7 +80,9 @@ public class DataContext : IdentityDbContext
     {
         var random = new Random();
         var roles = Enum.GetValues(typeof(Roles));
-        return (Roles)roles.GetValue(random.Next(roles.Length));
+        //return (Roles)roles.GetValue(random.Next(roles.Length));
+        return (Roles)roles.GetValue(3);
+        
     }
 
     private Roles GetRole(int index)

@@ -2,6 +2,8 @@
 @using BlazorUserManagerApp.Models
 @using BlazorUserManagerApp.Services
 @using static BlazorUserManagerApp.Components.Warning
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+
 <h3>AddEmployee</h3>
 @attribute [Authorize(Roles="Admin")]
 
@@ -83,6 +85,17 @@ else
     private WarningType Warning_Type;
 
     private Employee addEmployeeForm = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUser = GetAuthenticationStateAsync.GetAuthenticationStateAsync().Result.User.Identity.Name;
+        var myUserDetails = await employeeService.GetEmployeeFromUsername(currentUser);
+        var userRoles = await employeeService.GetEmployeeRoles(myUserDetails.Employee);
+        if (!userRoles.Contains("Admin"))
+        {
+            navigationManager.NavigateTo("/");
+        }
+    }
 
     private async Task AddNewEmployee()
     {

@@ -8,6 +8,8 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Mvc.Rendering
 @using System.Security.Claims
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+
 @attribute [ Authorize(Roles = "Admin")]
 <h3>EmployeesTable</h3>
 
@@ -63,6 +65,14 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var currentUser = GetAuthenticationStateAsync.GetAuthenticationStateAsync().Result.User.Identity.Name;
+        var myUserDetails = await EmployeeService.GetEmployeeFromUsername(currentUser);
+        var userRoles = await EmployeeService.GetEmployeeRoles(myUserDetails.Employee);
+        if (!userRoles.Contains("Admin"))
+        {
+            navigationManager.NavigateTo("/");
+        }
+
         var response = await EmployeeService.GetEmployees();
 
         if(response.StatusCode == 500)

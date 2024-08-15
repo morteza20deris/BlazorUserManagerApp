@@ -1,26 +1,28 @@
-﻿@page "/modal"
-<Modal @ref="modal" Title="Modal title">
-    <BodyTemplate>
-        Modal body text goes here.
-    </BodyTemplate>
-    <FooterTemplate>
-        <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
-        <Button Color="ButtonColor.Primary">Save changes</Button>
-    </FooterTemplate>
-</Modal>
+﻿@using BlazorUserManagerApp.Models
+<div class="row">
+    <div class="col-7 col-md-9">@Message</div>
+</div>
 
-<Button Color="ButtonColor.Primary" @onclick="OnShowModalClick">Show Modal</Button>
+<Button class="mt-3" Color="ButtonColor.Success" Type="ButtonType.Button" @onclick="OnAcceptCallback">
+    Accept
+</Button>
+<Button class="mt-3" Color="ButtonColor.Danger" Type="ButtonType.Button" @onclick="OnCancelCallback">
+    Cancel
+</Button>
+
 
 @code {
     private Modal modal = default!;
 
-    private async Task OnShowModalClick()
+    [Parameter] public string Message { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnAcceptCallback { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnCancelCallback { get; set; }
+
+    protected override void OnInitialized()
     {
-        await modal.ShowAsync();
+        // get employee with {EmployeeId} from DB
+        base.OnInitialized();
     }
 
-    private async Task OnHideModalClick()
-    {
-        await modal.HideAsync();
-    }
+    
 }

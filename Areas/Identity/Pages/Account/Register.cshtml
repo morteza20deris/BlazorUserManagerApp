@@ -14,11 +14,11 @@
                                 <form id="account" method="post">
                                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                                     <div class="form-floating" style="margin:10px">
-                                        <input asp-for="Input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="UserName">
+                                        <input asp-for="Input.UserName" class="form-control" minlength="3" maxlength="32" autocomplete="username" aria-required="true" placeholder="UserName">
                                         <label asp-for="Input.UserName" class="form-label">UserName</label>
                                     </div>
                                     <div class="form-floating" style="margin:10px">
-                                        <input asp-for="Input.EmailAddress" class="form-control" autocomplete="email" aria-required="true" placeholder="E-Mail">
+                                        <input asp-for="Input.EmailAddress" class="form-control" autocomplete="email" type="email" aria-required="true" placeholder="E-Mail">
                                         <label asp-for="Input.EmailAddress" class="form-label">E-Mail</label>
                                     </div>
                                     <div class="form-floating" style="margin:10px">

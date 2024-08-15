@@ -62,6 +62,9 @@ public enum Roles
 
     [Display(Name = "Operator")]
     Operator,
+
+    [Display(Name = "Whithout Role")]
+    WhithoutRole,
 }
 
 public static class EnumExtensions

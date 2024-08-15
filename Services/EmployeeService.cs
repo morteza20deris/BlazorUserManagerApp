@@ -292,7 +292,7 @@ public class EmployeeService : IEmployeeService
             else
             {
                 response.StatusCode = 500;
-                response.Message = "error Removing Role" + result.Errors;
+                response.Message = "error Removing Role" + result.Errors.ToArray()[0].Description;
             }
         }
         catch(Exception ex) 

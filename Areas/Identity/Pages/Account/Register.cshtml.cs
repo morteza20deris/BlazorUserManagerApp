@@ -29,7 +29,7 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
         {
             [Required]
             [MinLength(3)]
-            [MaxLength(16)]
+            [MaxLength(32)]
             public string UserName { get; set; }
             [Required(ErrorMessage = "Password is required")]
             [DataType(DataType.Password)]

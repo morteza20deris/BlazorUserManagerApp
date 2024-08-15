@@ -52,9 +52,12 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
         public class inputModel
         {
             [Required]
+            [MinLength(3)]
             public string UserName { get; set; }
             [DataType(DataType.Password)]
             [Required]
+            [MinLength(8)]
+            [MaxLength(16)]
             public string Password { get; set; }
         }
     }
