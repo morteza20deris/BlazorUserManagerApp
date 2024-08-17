@@ -1,7 +1,7 @@
 ﻿namespace BlazorUserManagerApp.Models.Responses
 {
-    public class GetEmployeeResponse:BaseResponse
+    public class GetEmployeeResponse : BaseResponse
     {
-        public Employee Employee {  get; set; }
+        public Employee Employee { get; set; }
     }
 }

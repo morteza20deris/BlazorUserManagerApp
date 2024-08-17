@@ -9,7 +9,9 @@ namespace BlazorUserManagerApp.Data;
 public class DataContext : IdentityDbContext
 {
     public DbSet<Employee> AspNetUsers { get; set; }
-    public DataContext(DbContextOptions options) : base(options) { }
+
+    public DataContext(DbContextOptions options)
+        : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -17,15 +19,23 @@ public class DataContext : IdentityDbContext
 
         modelBuilder.Entity<IdentityRole>().HasData(getRoles());
         modelBuilder.Entity<Employee>().HasData(GetEmployees());
-        
-        
     }
 
     private IdentityRole[] getRoles()
     {
         //var roles = Enum.GetValues(typeof(Roles));
         var roles = System.Enum.GetNames(typeof(Roles));
-        return roles.Select((x, i) => new IdentityRole() { Id = i.ToString(), Name = x.ToString(), NormalizedName = x.ToString().ToUpper() }).ToArray();
+        return roles
+            .Select(
+                (x, i) =>
+                    new IdentityRole()
+                    {
+                        Id = i.ToString(),
+                        Name = x.ToString(),
+                        NormalizedName = x.ToString().ToUpper()
+                    }
+            )
+            .ToArray();
     }
 
     private List<Employee> GetEmployees()
@@ -50,9 +60,7 @@ public class DataContext : IdentityDbContext
                 Active = true,
                 ChangePaswword = true,
                 EmailConfirmed = true
-
             };
-            
 
             employees.Add(employee);
         }
@@ -82,7 +90,6 @@ public class DataContext : IdentityDbContext
         var roles = Enum.GetValues(typeof(Roles));
         //return (Roles)roles.GetValue(random.Next(roles.Length));
         return (Roles)roles.GetValue(3);
-        
     }
 
     private Roles GetRole(int index)
@@ -91,6 +98,4 @@ public class DataContext : IdentityDbContext
         var roles = Enum.GetValues(typeof(Roles));
         return (Roles)roles.GetValue(index);
     }
-
-
 }

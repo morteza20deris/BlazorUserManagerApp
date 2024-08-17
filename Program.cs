@@ -12,24 +12,27 @@ builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddSingleton<WeatherForecastService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContextFactory<DataContext>(options => options.UseSqlServer(connectionString));
-builder.Services.AddAuthorization(options => {
+builder.Services.AddDbContextFactory<DataContext>(options =>
+    options.UseSqlServer(connectionString)
+);
+builder.Services.AddAuthorization(options =>
+{
     options.AddPolicy("AdminPolicy", policy => policy.RequireClaim("Admin"));
     options.AddPolicy("SupervisorPolicy", policy => policy.RequireClaim("Supervisor"));
     options.AddPolicy("OperatorPolicy", policy => policy.RequireClaim("Operator"));
-    
 });
 
-
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
-{
-    options.Password.RequireDigit = false;
-    options.Password.RequiredLength = 1;
-    options.Password.RequireNonAlphanumeric = false;
-    options.SignIn.RequireConfirmedEmail = false;
-    
-})
-    .AddEntityFrameworkStores<DataContext>().AddDefaultTokenProviders().AddRoles<IdentityRole>();
+builder
+    .Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+    {
+        options.Password.RequireDigit = false;
+        options.Password.RequiredLength = 1;
+        options.Password.RequireNonAlphanumeric = false;
+        options.SignIn.RequireConfirmedEmail = false;
+    })
+    .AddEntityFrameworkStores<DataContext>()
+    .AddDefaultTokenProviders()
+    .AddRoles<IdentityRole>();
 builder.Services.AddBlazorBootstrap();
 
 var app = builder.Build();
