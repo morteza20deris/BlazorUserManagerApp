@@ -23,7 +23,7 @@
     <UICard>
         <div class="table-responsive">
             <div class="form-floating mb-3">
-                <input oninput="@FilterEmployees" type="text" class="form-control" id="floatingInput" placeholder="Search Employees" />
+                <input oninput="@FilterEmployees" autofocus type="text" class="form-control" @ref="searchUsers" id="floatingInput" placeholder="Search Employees" />
                 <label for="floatingInput">Search by Name</label>
             </div>
             <table class="table table-borderless mb-0">
@@ -57,7 +57,7 @@
 
     private List<Employee>? Employees;
     private List<Employee>? ConstEmployees;
-
+    private ElementReference searchUsers;
 
     private bool showWarning = false;
     private string Warning_Message = "";
@@ -86,6 +86,17 @@
             ConstEmployees = response.Employees;
         }
 
+
+
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(searchUsers.Context != null)
+        {
+            await searchUsers.FocusAsync();
+        }
     }
 
     private string GetEmployeeTypeStyle(EmployeeType employeeType) => employeeType switch

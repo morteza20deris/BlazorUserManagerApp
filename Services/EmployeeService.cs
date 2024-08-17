@@ -1,11 +1,10 @@
-﻿using BlazorUserManagerApp.Data;
-using BlazorUserManagerApp.Models.Responses;
-using Microsoft.EntityFrameworkCore;
-using BlazorUserManagerApp.Models;
-using Microsoft.AspNetCore.Identity;
+﻿using System.Collections;
 using System.Security.Claims;
-using System.Collections;
-
+using BlazorUserManagerApp.Data;
+using BlazorUserManagerApp.Models;
+using BlazorUserManagerApp.Models.Responses;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlazorUserManagerApp.Services;
 
@@ -18,14 +17,12 @@ public interface IEmployeeService
     Task<BaseResponse> DeleteEmployee(Employee employee);
     Task<BaseResponse> UpdateEmployee(Employee employee);
 
-    Task<BaseResponse> ResetPassword(Employee employee,string password);
+    Task<BaseResponse> ResetPassword(Employee employee, string password);
 
     Task<int> GetUserCountWithRole(string role);
-    Task<BaseResponse> setEmployeeToRole(Employee employee,Roles role);
-    Task<BaseResponse> DeleteEmployeeRole(Employee employee,string role);
+    Task<BaseResponse> setEmployeeToRole(Employee employee, Roles role);
+    Task<BaseResponse> DeleteEmployeeRole(Employee employee, string role);
     Task<IList<string>> GetEmployeeRoles(Employee employee);
-
-
 }
 
 public class EmployeeService : IEmployeeService
@@ -33,7 +30,10 @@ public class EmployeeService : IEmployeeService
     private readonly IDbContextFactory<DataContext> _factory;
     private readonly UserManager<IdentityUser> _userManager;
 
-    public EmployeeService(IDbContextFactory<DataContext> factory, UserManager<IdentityUser> userManager)
+    public EmployeeService(
+        IDbContextFactory<DataContext> factory,
+        UserManager<IdentityUser> userManager
+    )
     {
         _factory = factory;
         _userManager = userManager;
@@ -41,8 +41,6 @@ public class EmployeeService : IEmployeeService
 
     public async Task<BaseResponse> AddEmployee(Employee employee)
     {
-        
-        
         var response = new BaseResponse();
         try
         {
@@ -59,17 +57,24 @@ public class EmployeeService : IEmployeeService
                 Salary = employee.Salary,
                 Type = employee.Type,
                 ChangePaswword = true
-
-            } ;
-            
+            };
 
             var result = await _userManager.CreateAsync(identity, employee.PasswordHash);
 
             if (result.Succeeded)
             {
+                var roleRes = await setEmployeeToRole(identity, employee.Role);
                 response.StatusCode = 200;
                 response.Message = "Employee Added succesfully";
-
+                if (roleRes.StatusCode == 200)
+                {
+                    response.Message += "\b Role Added to employee succesfully";
+                }
+                else
+                {
+                    response.Message +=
+                        "\b Failed to add role to Employee Error: " + roleRes.Message;
+                }
             }
             else
             {
@@ -77,11 +82,16 @@ public class EmployeeService : IEmployeeService
                 response.Message = "Error accurred while adding new Employee";
             }
         }
-        catch (Exception ex) { 
-            response.StatusCode=500;
-            response.Message ="Adding new Employee Error: "+ ex.Message+"\bInner Exception: "+ex.InnerException;
+        catch (Exception ex)
+        {
+            response.StatusCode = 500;
+            response.Message =
+                "Adding new Employee Error: "
+                + ex.Message
+                + "\bInner Exception: "
+                + ex.InnerException;
         }
-        
+
         return response;
     }
 
@@ -111,7 +121,7 @@ public class EmployeeService : IEmployeeService
             response.StatusCode = 500;
             response.Message = "Removing Employee Error: " + ex.Message;
         }
-        
+
         return response;
     }
 
@@ -122,7 +132,9 @@ public class EmployeeService : IEmployeeService
         try
         {
             using var context = _factory.CreateDbContext();
-            var employee = await context.AspNetUsers.FirstOrDefaultAsync(x => x.Id == id.ToString());
+            var employee = await context.AspNetUsers.FirstOrDefaultAsync(x =>
+                x.Id == id.ToString()
+            );
             response.StatusCode = 200;
             response.Message = "Success";
             response.Employee = employee;
@@ -144,7 +156,9 @@ public class EmployeeService : IEmployeeService
         try
         {
             using var context = _factory.CreateDbContext();
-            var employee = await context.AspNetUsers.FirstOrDefaultAsync(x => x.UserName == userName);
+            var employee = await context.AspNetUsers.FirstOrDefaultAsync(x =>
+                x.UserName == userName
+            );
             response.StatusCode = 200;
             response.Message = "Success";
             response.Employee = employee;
@@ -182,7 +196,6 @@ public class EmployeeService : IEmployeeService
 
     public async Task<int> GetUserCountWithRole(string role)
     {
-
         int roleCount = 0;
         var employeeRoles = await _userManager.GetUsersInRoleAsync(role);
         roleCount = employeeRoles.Count();
@@ -193,13 +206,12 @@ public class EmployeeService : IEmployeeService
     {
         var getUser = _userManager.FindByIdAsync(employee.Id).Result;
         var token = _userManager.GeneratePasswordResetTokenAsync(getUser);
-        var result = await _userManager.ResetPasswordAsync(getUser, token.Result,password);
+        var result = await _userManager.ResetPasswordAsync(getUser, token.Result, password);
         var response = new BaseResponse();
         if (result.Succeeded)
         {
             response.StatusCode = 200;
             response.Message = result.ToString();
-            
         }
         else
         {
@@ -213,11 +225,9 @@ public class EmployeeService : IEmployeeService
 
     public async Task<IList<string>> GetEmployeeRoles(Employee employee)
     {
-            var rolesRes = await _userManager.GetRolesAsync(employee);
-            return rolesRes;
+        var rolesRes = await _userManager.GetRolesAsync(employee);
+        return rolesRes;
     }
-
-    
 
     public async Task<BaseResponse> setEmployeeToRole(Employee employee, Roles role)
     {
@@ -225,22 +235,34 @@ public class EmployeeService : IEmployeeService
         try
         {
             var dbEmployee = await _userManager.FindByIdAsync(employee.Id);
-            var roleAddedResult = await _userManager.AddToRoleAsync(dbEmployee, role.GetDisplayName());
+            var roleAddedResult = await _userManager.AddToRoleAsync(
+                dbEmployee,
+                role.GetDisplayName()
+            );
             if (roleAddedResult.Succeeded)
             {
-                var claimRes = await _userManager.AddClaimAsync(dbEmployee,new Claim(role.GetDisplayName(),role.GetDisplayName()));
+                var claimRes = await _userManager.AddClaimAsync(
+                    dbEmployee,
+                    new Claim(role.GetDisplayName(), role.GetDisplayName())
+                );
+                SetEmployeeRoles(dbEmployee as Employee);
                 response.StatusCode = 200;
                 response.Message = "Role Added Successfully";
             }
             else
             {
                 response.StatusCode = 500;
-                response.Message = "Error acured while adding Role: "+roleAddedResult.Errors;
+                response.Message = "Error acured while adding Role: " + roleAddedResult.Errors;
             }
         }
-        catch (Exception ex) { 
+        catch (Exception ex)
+        {
             response.StatusCode = 500;
-            response.Message = "Error acured while adding Role: "+ ex.Message+"\b innerException: "+ex.InnerException;
+            response.Message =
+                "Error acured while adding Role: "
+                + ex.Message
+                + "\b innerException: "
+                + ex.InnerException;
         }
         return response;
     }
@@ -250,12 +272,26 @@ public class EmployeeService : IEmployeeService
         var response = new BaseResponse();
         try
         {
-            using var context = _factory.CreateDbContext();
-            context.Update(employee);
+            //using var context = _factory.CreateDbContext();
+            var dbEmployee = await _userManager.FindByIdAsync(employee.Id) as Employee;
+            //var newEmployee = MergeObjects(dbEmployee, employee);
+            dbEmployee.FullName = employee.FullName;
+            dbEmployee.UserName = employee.UserName;
+            dbEmployee.Email = employee.Email;
+            dbEmployee.Salary = employee.Salary;
+            dbEmployee.Type = employee.Type;
+            dbEmployee.Avatar = employee.Avatar;
+            dbEmployee.Role = employee.Role;
+            dbEmployee.Active = employee.Active;
+            dbEmployee.LastPasswordChange = employee.LastPasswordChange;
+            dbEmployee.ChangePaswword = employee.ChangePaswword;
 
-            var result = await context.SaveChangesAsync();
+            //context.Update(employee);
+            var updateRes = await _userManager.UpdateAsync(dbEmployee);
 
-            if (result == 1)
+            //var result = await context.SaveChangesAsync();
+
+            if (updateRes.Succeeded)
             {
                 response.StatusCode = 200;
                 response.Message = "Employee Updated succesfully";
@@ -275,19 +311,36 @@ public class EmployeeService : IEmployeeService
         return response;
     }
 
+    private async void SetEmployeeRoles(Employee employee)
+    {
+        var employeeRoles = await _userManager.GetRolesAsync(employee);
+        if (employeeRoles.Count > 0)
+        {
+            employee.Role = (Roles)Enum.Parse(typeof(Roles), employeeRoles.ToArray()[0]);
+        }
+        else
+        {
+            employee.Role = Roles.WhithoutRole;
+        }
+        var updateRes = await UpdateEmployee(employee);
+    }
+
     public async Task<BaseResponse> DeleteEmployeeRole(Employee employee, string role)
     {
         var response = new BaseResponse();
         try
         {
-            var dbEmployee =await _userManager.FindByIdAsync(employee.Id);
+            var dbEmployee = await _userManager.FindByIdAsync(employee.Id);
             var result = await _userManager.RemoveFromRoleAsync(dbEmployee, role);
             if (result.Succeeded)
             {
-                var ClaimRes = await _userManager.RemoveClaimAsync(dbEmployee,new Claim(role, role));
+                var ClaimRes = await _userManager.RemoveClaimAsync(
+                    dbEmployee,
+                    new Claim(role, role)
+                );
+                SetEmployeeRoles(dbEmployee as Employee);
                 response.StatusCode = 200;
                 response.Message = "Role Removed";
-                
             }
             else
             {
@@ -295,10 +348,11 @@ public class EmployeeService : IEmployeeService
                 response.Message = "error Removing Role" + result.Errors.ToArray()[0].Description;
             }
         }
-        catch(Exception ex) 
+        catch (Exception ex)
         {
-            response.StatusCode=500;
-            response.Message = "error Removing Role:"+ex.Message + "\bInnerException:" + ex.InnerException;
+            response.StatusCode = 500;
+            response.Message =
+                "error Removing Role:" + ex.Message + "\bInnerException:" + ex.InnerException;
         }
         return response;
     }

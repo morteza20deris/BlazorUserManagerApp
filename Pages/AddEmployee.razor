@@ -7,13 +7,8 @@
 <h3>AddEmployee</h3>
 @attribute [Authorize(Roles="Admin")]
 
-@if (showWarning)
-{
-    <Warning OnClickCallback="DismissWarning" Type=@Warning_Type Message="@Warning_Message" />
-}
-else
-{
-    
+
+<Modal @ref="alertModal" />
     <UICard>
         <div class="row user-detail-row">
             <h3>Add New Employee</h3>
@@ -23,19 +18,19 @@ else
                     <ValidationSummary />
                     <p>
                         <div class="form-floating mb-3">
-                            <InputText class="form-control" id="floatingInput" placeholder="Full Name here" @bind-Value="addEmployeeForm.FullName" />
+                        <InputText class="form-control" id="floatingInput" required placeholder="Full Name here" @bind-Value="addEmployeeForm.FullName" />
                             <label for="floatingInput">Full Name</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <InputText class="form-control" id="floatingInput" minlength="3" maxlength="32" placeholder="UserName here" @bind-Value="addEmployeeForm.UserName" />
+                        <InputText class="form-control" id="floatingInput" required aria-required="true" minlength="3" maxlength="32" placeholder="UserName here" @bind-Value="addEmployeeForm.UserName" />
                             <label for="floatingInput">UserName</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <InputText class="form-control" id="floatingInput" placeholder="Email here" @bind-Value="addEmployeeForm.Email" />
+                            <InputText class="form-control" id="floatingInput" required aria-required="true" type="email" placeholder="Email here" @bind-Value="addEmployeeForm.Email" />
                             <label for="floatingInput">Email</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <InputText class="form-control" id="floatingInput" placeholder="Password here" @bind-Value="addEmployeeForm.PasswordHash" />
+                        <InputText class="form-control" id="floatingInput" required type="password" placeholder="Password here" @bind-Value="addEmployeeForm.PasswordHash" />
                             <label for="floatingInput">Password</label>
                         </div>
                         <div class="form-floating mb-3">
@@ -74,15 +69,12 @@ else
             </div>
         </div>
     </UICard>
-}
+
 
 @code {
     [Inject] private IEmployeeService employeeService { get; set; }
     [Inject] private NavigationManager navigationManager { get; set; }
-
-    private bool showWarning = false;
-    private string Warning_Message = "";
-    private WarningType Warning_Type;
+    private Modal alertModal = default!;
 
     private Employee addEmployeeForm = new();
 
@@ -99,17 +91,23 @@ else
 
     private async Task AddNewEmployee()
     {
-        addEmployeeForm.Active = true;
-        var response = await employeeService.AddEmployee(addEmployeeForm);
-        Warning_Type = response.StatusCode == 200 ? WarningType.Success : WarningType.Error;
-        Warning_Message = response.Message;
-        showWarning = true;
-    }
 
-    private void DismissWarning()
-    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("Message", "Are you sure you want to Create this user?");
+        parameters.Add("Type", "Alert");
+        parameters.Add("OnAcceptCallback", EventCallback.Factory.Create<MouseEventArgs>(this, async () =>
+        {
+            addEmployeeForm.Active = true;
+            var response = await employeeService.AddEmployee(addEmployeeForm);
 
-        showWarning = false;
-        navigationManager.NavigateTo("/");
+            var parameters = new Dictionary<string, object>();
+            parameters.Add("Message", response.Message);
+            parameters.Add("Type", "Response");
+            parameters.Add("OnAcceptCallback", EventCallback.Factory.Create<MouseEventArgs>(this, response.StatusCode == 200 ? () => navigationManager.Refresh() : () => alertModal.HideAsync()));
+            parameters.Add("OnCancelCallback", EventCallback.Factory.Create<MouseEventArgs>(this, response.StatusCode == 200 ? () => navigationManager.Refresh() : () => alertModal.HideAsync()));
+            await alertModal.ShowAsync<AlertModal>(title: "Alert", parameters: parameters);
+        }));
+        parameters.Add("OnCancelCallback", EventCallback.Factory.Create<MouseEventArgs>(this, () => alertModal.HideAsync()));
+        await alertModal.ShowAsync<AlertModal>(title: "Alert", parameters: parameters);
     }
 }
