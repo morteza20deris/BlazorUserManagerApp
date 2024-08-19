@@ -14,6 +14,6 @@ namespace BlazorUserManagerApp.Models
             "^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}",
             ErrorMessage = "Invalid Password"
         )]
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = string.Empty;
     }
 }

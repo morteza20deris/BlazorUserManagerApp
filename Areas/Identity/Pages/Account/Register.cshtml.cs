@@ -1,9 +1,6 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using BlazorUserManagerApp.Models;
-using BlazorUserManagerApp.Services;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -15,6 +12,9 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
 
+        [BindProperty]
+        public InputModel? Input { get; set; }
+
         public RegisterModel(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager
@@ -24,15 +24,12 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
             _userManager = userManager;
         }
 
-        [BindProperty]
-        public InputModel Input { get; set; }
-
         public class InputModel
         {
             [Required]
             [MinLength(3)]
             [MaxLength(32)]
-            public string UserName { get; set; }
+            public string UserName { get; set; } = string.Empty;
 
             [Required(ErrorMessage = "Password is required")]
             [DataType(DataType.Password)]
@@ -42,7 +39,7 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
                 "^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}",
                 ErrorMessage = "Invalid Password"
             )]
-            public string Password { get; set; }
+            public string Password { get; set; } = string.Empty;
 
             [Required(ErrorMessage = "Password is required")]
             [DataType(DataType.Password)]
@@ -52,16 +49,16 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
                 "^(?=.*[A-Za-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,16}",
                 ErrorMessage = "Invalid Password"
             )]
-            public string ConfirmPassword { get; set; }
+            public string ConfirmPassword { get; set; } = string.Empty;
 
             [Required]
             [EmailAddress]
-            public string EmailAddress { get; set; }
+            public string EmailAddress { get; set; } = string.Empty;
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (ModelState.IsValid && Input.Password == Input.ConfirmPassword)
+            if (Input != null && ModelState.IsValid && Input.Password == Input.ConfirmPassword)
             {
                 var identity = new Employee
                 {
@@ -77,12 +74,15 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     var user = await _userManager.FindByNameAsync(Input.UserName);
-                    var roleRes = await _userManager.AddToRoleAsync(user, "Admin");
-                    var claimRes = await _userManager.AddClaimAsync(
-                        user,
-                        new Claim("Admin", "Admin")
-                    );
-                    await _signInManager.SignInAsync(identity, isPersistent: false);
+                    if (user != null)
+                    {
+                        var roleRes = await _userManager.AddToRoleAsync(user, "Admin");
+                        var claimRes = await _userManager.AddClaimAsync(
+                            user,
+                            new Claim("Admin", "Admin")
+                        );
+                        await _signInManager.SignInAsync(identity, isPersistent: false);
+                    }
                     return LocalRedirect("~/");
                 }
             }

@@ -25,7 +25,7 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && Input != null)
             {
                 var result = await _signInManager.PasswordSignInAsync(
                     Input.UserName,
@@ -39,7 +39,9 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
                 }
                 else
                 {
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                     Employee user = await _userManager.FindByNameAsync(Input.UserName) as Employee;
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
                     if (user != null && user.AccessFailedCount < 3)
                     {
                         await _userManager.AccessFailedAsync(user);
@@ -59,13 +61,13 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
         {
             [Required]
             [MinLength(3)]
-            public string UserName { get; set; }
+            public string UserName { get; set; } = string.Empty;
 
             [DataType(DataType.Password)]
             [Required]
             [MinLength(8)]
             [MaxLength(16)]
-            public string Password { get; set; }
+            public string Password { get; set; } = string.Empty;
         }
     }
 }

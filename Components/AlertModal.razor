@@ -1,4 +1,5 @@
-﻿@using BlazorUserManagerApp.Models
+﻿@using BlazorBootstrap
+@using BlazorUserManagerApp.Models
 <div>
 
 <div class="row">
@@ -19,10 +20,10 @@
 
 
 @code {
-    private Modal modal = default!;
+    //private Modal modal = default!;
 
-    [Parameter] public string Message { get; set; }
-    [Parameter] public string Type { get; set; }
+    [Parameter] public string Message { get; set; } = string.Empty;
+    [Parameter] public string Type { get; set; } = string.Empty;
     [Parameter] public EventCallback<MouseEventArgs> OnAcceptCallback { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> OnCancelCallback { get; set; }
 

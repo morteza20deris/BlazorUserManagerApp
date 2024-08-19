@@ -12,10 +12,10 @@ public class Employee : IdentityUser
     [Required]
     [MinLength(3)]
     [MaxLength(32)]
-    public string FullName { get; set; }
+    public string FullName { get; set; } = string.Empty;
 
     [DataType(DataType.Url)]
-    public string Avatar { get; set; }
+    public string Avatar { get; set; } = string.Empty;
 
     [Required]
     public decimal Salary { get; set; }
@@ -65,13 +65,15 @@ public enum Roles
 
 public static class EnumExtensions
 {
-    public static string? GetDisplayName(this Enum enumValue)
+    public static string GetDisplayName(this Enum enumValue)
     {
+#pragma warning disable CS8603 // Possible null reference return.
         return enumValue
             .GetType()
             .GetMember(enumValue.ToString())
             .First()
             .GetCustomAttribute<DisplayAttribute>()
             ?.GetName();
+#pragma warning restore CS8603 // Possible null reference return.
     }
 }

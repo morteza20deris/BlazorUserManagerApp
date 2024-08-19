@@ -55,6 +55,7 @@ using (var scope = app.Services.CreateScope())
     //        dbContext.Database.OpenConnection();
     //        SqlCommand sqlCommand = new SqlCommand("create databse MyDatabase");
     //        sqlCommand.ExecuteNonQuery();
+    //        dbContext.Database.EnsureCreated();
     //    }
     //    catch (Exception e)
     //    {

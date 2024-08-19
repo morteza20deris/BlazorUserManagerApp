@@ -1,51 +1,58 @@
 ﻿@page "/"
 @using BlazorUserManagerApp.Models
 @using BlazorUserManagerApp.Data
+@using BlazorUserManagerApp.Models.Responses
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Mvc.Rendering
 @using System.Security.Claims
 @using BlazorUserManagerApp.Services
 @inject AuthenticationStateProvider GetAuthenticationStateAsync
 @inject NavigationManager navigationManager
+@inject IEmployeeService employeeService
 @attribute [Authorize(Roles = "Admin")]
 
 
 @code {
-    [Inject] private IEmployeeService employeeService { get; set; }
-
-
     protected async override Task OnInitializedAsync()
     {
 
         var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
         var user = authstate.User;
-        var response = await employeeService.GetEmployeeFromUsername(user.Identity.Name);
-        Employee employee = response.Employee;
-        if(employee != null)
+        GetEmployeeResponse response = new(new());
+        if(user.Identity?.Name != null)
         {
-            TimeSpan timeSincePasswordChange = DateTime.Now - employee.LastPasswordChange;
-            if (timeSincePasswordChange.Minutes > 1)
-            {
-                employee.ChangePaswword = true;
-                await employeeService.UpdateEmployee(employee);
 
+            response = await employeeService.GetEmployeeFromUsername(user.Identity.Name);
+
+            Employee employee = response.Employee;
+            if (employee != null)
+            {
+                TimeSpan timeSincePasswordChange = DateTime.Now - employee.LastPasswordChange;
+                if (timeSincePasswordChange.Minutes > 1)
+                {
+                    employee.ChangePaswword = true;
+                    await employeeService.UpdateEmployee(employee);
+
+                }
+            }
+
+
+            if (response.Employee != null && response.Employee.Active)
+            {
+                NavigateToEmployeeDetail(Int32.Parse(response.Employee.Id));
+            }
+            else if (response.Employee != null && !response.Employee.Active)
+            {
+                navigationManager.NavigateTo("/ContactAdmin");
+
+            }
+            else
+            {
+                navigationManager.NavigateTo("/Identity/Account/Login");
             }
         }
         
         
-        if(response.Employee != null && response.Employee.Active)
-        {
-            NavigateToEmployeeDetail(Int32.Parse(response.Employee.Id));
-        }
-        else if (response.Employee != null && !response.Employee.Active)
-        {
-            navigationManager.NavigateTo("/ContactAdmin");
-            
-        }
-        else
-        {
-            navigationManager.NavigateTo("/Identity/Account/Login");
-        }
     }
 
     private void NavigateToEmployeeDetail(int employeeID)

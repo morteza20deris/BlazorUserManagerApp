@@ -2,28 +2,26 @@
 @using BlazorUserManagerApp.Models
 @using BlazorUserManagerApp.Services
 @using BlazorUserManagerApp.Components
-@using static BlazorUserManagerApp.Components.Warning
 @inject NavigationManager navigationManager
 @using BlazorUserManagerApp.Data
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Mvc.Rendering
 @using System.Security.Claims
 @inject AuthenticationStateProvider GetAuthenticationStateAsync
+@inject IEmployeeService employeeService
 
 @attribute [ Authorize(Roles = "Admin")]
 <h3>EmployeesTable</h3>
 
-@if (showWarning)
-{
-    <Warning OnClickCallback="DismissWarning" Type=@Warning_Type Message="@Warning_Message" />
-}
+
 
 @if (Employees != null)
 {
+    <Modal @ref="alertModal" />
     <UICard>
         <div class="table-responsive">
             <div class="form-floating mb-3">
-                <input oninput="@FilterEmployees" autofocus type="text" class="form-control" @ref="searchUsers" id="floatingInput" placeholder="Search Employees" />
+                <input @oninput="@(searchText => {FilterEmployees(searchText);})" @bind-value="searchText" autofocus type="text" class="form-control" @ref="searchUsers" id="floatingInput" placeholder="Search Employees" />
                 <label for="floatingInput">Search by Name</label>
             </div>
             <table class="table table-borderless mb-0">
@@ -53,32 +51,40 @@
 
 
 @code {
-    [Inject] private IEmployeeService EmployeeService { get; set; }
+    
 
     private List<Employee>? Employees;
     private List<Employee>? ConstEmployees;
     private ElementReference searchUsers;
-
-    private bool showWarning = false;
-    private string Warning_Message = "";
-    private WarningType Warning_Type;
-
+    private Modal alertModal = default!;
+    private string currentUser = string.Empty;
+    private string searchText = string.Empty;
+    
     protected override async Task OnInitializedAsync()
     {
-        var currentUser = GetAuthenticationStateAsync.GetAuthenticationStateAsync().Result.User.Identity.Name;
-        var myUserDetails = await EmployeeService.GetEmployeeFromUsername(currentUser);
-        var userRoles = await EmployeeService.GetEmployeeRoles(myUserDetails.Employee);
+        var authState = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.Name != null)
+        {
+            currentUser = authState.User.Identity.Name;
+        }
+
+        var myUserDetails = await employeeService.GetEmployeeFromUsername(currentUser);
+        var userRoles = await employeeService.GetEmployeeRoles(myUserDetails.Employee);
         if (!userRoles.Contains("Admin"))
         {
             navigationManager.NavigateTo("/");
         }
 
-        var response = await EmployeeService.GetEmployees();
+        var response = await employeeService.GetEmployees();
 
         if(response.StatusCode == 500)
         {
-            showWarning = true;
-            Warning_Message = response.Message;
+            var parameters = new Dictionary<string, object>();
+            parameters.Add("Message", response.Message);
+            parameters.Add("Type", "Response");
+            parameters.Add("OnAcceptCallback", EventCallback.Factory.Create<MouseEventArgs>(this, () => navigationManager.Refresh()));
+            parameters.Add("OnCancelCallback", EventCallback.Factory.Create<MouseEventArgs>(this, () => navigationManager.Refresh()));
+            await alertModal.ShowAsync<AlertModal>(title: "Alert", parameters: parameters);
         }
         else
         {
@@ -105,6 +111,8 @@
         EmployeeType.FullTime => "full-time",
         EmployeeType.PartTime => "part-time",
         EmployeeType.Casual => "casual"
+
+        
     };
 
     private void NavigateToEmployeeDetail(int employeeID)  {
@@ -112,15 +120,9 @@
 
     }
 
-    private void DismissWarning()
-    {
-
-        showWarning = false;
-        navigationManager.NavigateTo("/");
-    }
-
     private void FilterEmployees(ChangeEventArgs e)
     {
+       
         Employees = ConstEmployees;
         Employees = Employees?.Where(x => x.FullName?.IndexOf(e?.Value?.ToString() ?? "",StringComparison.OrdinalIgnoreCase) >=0).ToList();
     }

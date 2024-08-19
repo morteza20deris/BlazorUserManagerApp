@@ -17,11 +17,11 @@ public class DataContext : IdentityDbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<IdentityRole>().HasData(getRoles());
+        modelBuilder.Entity<IdentityRole>().HasData(GetRoles());
         modelBuilder.Entity<Employee>().HasData(GetEmployees());
     }
 
-    private IdentityRole[] getRoles()
+    private static IdentityRole[] GetRoles()
     {
         //var roles = Enum.GetValues(typeof(Roles));
         var roles = System.Enum.GetNames(typeof(Roles));
@@ -38,7 +38,7 @@ public class DataContext : IdentityDbContext
             .ToArray();
     }
 
-    private List<Employee> GetEmployees()
+    private static List<Employee> GetEmployees()
     {
         var employees = new List<Employee>();
         var faker = new Faker("en"); // Specify the language for name generation
@@ -68,7 +68,7 @@ public class DataContext : IdentityDbContext
         return employees;
     }
 
-    private decimal GetRandomSalary()
+    private static decimal GetRandomSalary()
     {
         var random = new Random();
         decimal salary = random.Next(30000, 100000); // Generates a random salary between $30,000 and $100,000
@@ -76,26 +76,26 @@ public class DataContext : IdentityDbContext
     }
 
     // Method to get a random employee type
-    private EmployeeType GetRandomEmployeeType()
+    private static EmployeeType GetRandomEmployeeType()
     {
         var random = new Random();
         var types = Enum.GetValues(typeof(EmployeeType));
+#pragma warning disable CS8605 // Unboxing a possibly null value.
         return (EmployeeType)types.GetValue(random.Next(types.Length));
+#pragma warning restore CS8605 // Unboxing a possibly null value.
     }
 
     // Method to get a random position
-    private Roles GetRandomRole()
+    private static Roles GetRandomRole()
     {
-        var random = new Random();
-        var roles = Enum.GetValues(typeof(Roles));
-        //return (Roles)roles.GetValue(random.Next(roles.Length));
-        return (Roles)roles.GetValue(3);
+        return Models.Roles.WhithoutRole;
     }
 
-    private Roles GetRole(int index)
-    {
-        var random = new Random();
-        var roles = Enum.GetValues(typeof(Roles));
-        return (Roles)roles.GetValue(index);
-    }
+    //    private Roles GetRole(int index)
+    //    {
+    //        var random = new Random();
+    //        var roles = Enum.GetValues(typeof(Roles));
+    //#pragma warning disable CS8605 // Unboxing a possibly null value.
+    //        return (Roles)roles.GetValue(index);
+    //    }
 }

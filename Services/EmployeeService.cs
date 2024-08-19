@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using BlazorUserManagerApp.Data;
 using BlazorUserManagerApp.Models;
 using BlazorUserManagerApp.Models.Responses;
@@ -20,24 +19,19 @@ public interface IEmployeeService
     Task<BaseResponse> ResetPassword(Employee employee, string password);
 
     Task<int> GetUserCountWithRole(string role);
-    Task<BaseResponse> setEmployeeToRole(Employee employee, Roles role);
+    Task<BaseResponse> SetEmployeeToRole(Employee employee, Roles role);
     Task<BaseResponse> DeleteEmployeeRole(Employee employee, string role);
+    Task<BaseResponse> SetEmployeeRoles(Employee employee);
     Task<IList<string>> GetEmployeeRoles(Employee employee);
 }
 
-public class EmployeeService : IEmployeeService
+public class EmployeeService(
+    IDbContextFactory<DataContext> factory,
+    UserManager<IdentityUser> userManager
+) : IEmployeeService
 {
-    private readonly IDbContextFactory<DataContext> _factory;
-    private readonly UserManager<IdentityUser> _userManager;
-
-    public EmployeeService(
-        IDbContextFactory<DataContext> factory,
-        UserManager<IdentityUser> userManager
-    )
-    {
-        _factory = factory;
-        _userManager = userManager;
-    }
+    private readonly IDbContextFactory<DataContext> _factory = factory;
+    private readonly UserManager<IdentityUser> _userManager = userManager;
 
     public async Task<BaseResponse> AddEmployee(Employee employee)
     {
@@ -45,6 +39,7 @@ public class EmployeeService : IEmployeeService
         try
         {
             var roleCount = await GetUserCountWithRole(employee.Role.GetDisplayName());
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
             var identity = new Employee
             {
                 UserName = employee.UserName,
@@ -58,12 +53,15 @@ public class EmployeeService : IEmployeeService
                 Type = employee.Type,
                 ChangePaswword = true
             };
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
+#pragma warning disable CS8604 // Possible null reference argument.
             var result = await _userManager.CreateAsync(identity, employee.PasswordHash);
+#pragma warning restore CS8604 // Possible null reference argument.
 
             if (result.Succeeded)
             {
-                var roleRes = await setEmployeeToRole(identity, employee.Role);
+                var roleRes = await SetEmployeeToRole(identity, employee.Role);
                 response.StatusCode = 200;
                 response.Message = "Employee Added succesfully";
                 if (roleRes.StatusCode == 200)
@@ -100,8 +98,9 @@ public class EmployeeService : IEmployeeService
         var response = new BaseResponse();
         try
         {
+            var dbEmployee = await _userManager.FindByIdAsync(employee.Id);
             using var context = _factory.CreateDbContext();
-            context.Remove(employee);
+            context.Remove(dbEmployee!);
 
             var result = await context.SaveChangesAsync();
 
@@ -127,7 +126,7 @@ public class EmployeeService : IEmployeeService
 
     public async Task<GetEmployeeResponse> GetEmployeeFromId(int id)
     {
-        var response = new GetEmployeeResponse();
+        GetEmployeeResponse response = new(new());
 
         try
         {
@@ -135,15 +134,17 @@ public class EmployeeService : IEmployeeService
             var employee = await context.AspNetUsers.FirstOrDefaultAsync(x =>
                 x.Id == id.ToString()
             );
-            response.StatusCode = 200;
-            response.Message = "Success";
-            response.Employee = employee;
+            if (employee != null)
+            {
+                response.StatusCode = 200;
+                response.Message = "Success";
+                response.Employee = employee;
+            }
         }
         catch (Exception ex)
         {
             response.StatusCode = 500;
             response.Message = "Error retrieving employees: " + ex.Message;
-            response.Employee = null;
         }
 
         return response;
@@ -151,7 +152,7 @@ public class EmployeeService : IEmployeeService
 
     public async Task<GetEmployeeResponse> GetEmployeeFromUsername(string userName)
     {
-        var response = new GetEmployeeResponse();
+        GetEmployeeResponse response = new(new());
 
         try
         {
@@ -159,15 +160,17 @@ public class EmployeeService : IEmployeeService
             var employee = await context.AspNetUsers.FirstOrDefaultAsync(x =>
                 x.UserName == userName
             );
-            response.StatusCode = 200;
-            response.Message = "Success";
-            response.Employee = employee;
+            if (employee != null)
+            {
+                response.StatusCode = 200;
+                response.Message = "Success";
+                response.Employee = employee;
+            }
         }
         catch (Exception ex)
         {
             response.StatusCode = 500;
             response.Message = "Error retrieving employees: " + ex.Message;
-            response.Employee = null;
         }
 
         return response;
@@ -196,63 +199,73 @@ public class EmployeeService : IEmployeeService
 
     public async Task<int> GetUserCountWithRole(string role)
     {
-        int roleCount = 0;
         var employeeRoles = await _userManager.GetUsersInRoleAsync(role);
-        roleCount = employeeRoles.Count();
-        return roleCount;
+        return employeeRoles.Count;
     }
 
     public async Task<BaseResponse> ResetPassword(Employee employee, string password)
     {
-        var getUser = _userManager.FindByIdAsync(employee.Id).Result;
-        var token = _userManager.GeneratePasswordResetTokenAsync(getUser);
-        var result = await _userManager.ResetPasswordAsync(getUser, token.Result, password);
+        var getUser = await _userManager.FindByIdAsync(employee.Id);
         var response = new BaseResponse();
-        if (result.Succeeded)
+        if (getUser != null)
         {
-            response.StatusCode = 200;
-            response.Message = result.ToString();
+            var token = _userManager.GeneratePasswordResetTokenAsync(getUser);
+            var result = await _userManager.ResetPasswordAsync(getUser, token.Result, password);
+
+            if (result.Succeeded)
+            {
+                response.StatusCode = 200;
+                response.Message = result.ToString();
+            }
+            else
+            {
+                token.Dispose();
+                response.StatusCode = 500;
+                response.Message = "error" + result.ToString();
+            }
         }
         else
         {
-            token.Dispose();
             response.StatusCode = 500;
-            response.Message = "error" + result.ToString();
+            response.Message = "User Not Found";
         }
-
         return response;
     }
 
     public async Task<IList<string>> GetEmployeeRoles(Employee employee)
     {
-        var rolesRes = await _userManager.GetRolesAsync(employee);
+        var dbEmployee = await _userManager.FindByIdAsync(employee.Id);
+        var rolesRes = await _userManager.GetRolesAsync(dbEmployee!);
         return rolesRes;
     }
 
-    public async Task<BaseResponse> setEmployeeToRole(Employee employee, Roles role)
+    public async Task<BaseResponse> SetEmployeeToRole(Employee employee, Roles role)
     {
         var response = new BaseResponse();
         try
         {
             var dbEmployee = await _userManager.FindByIdAsync(employee.Id);
-            var roleAddedResult = await _userManager.AddToRoleAsync(
-                dbEmployee,
-                role.GetDisplayName()
-            );
-            if (roleAddedResult.Succeeded)
+            if (dbEmployee != null)
             {
-                var claimRes = await _userManager.AddClaimAsync(
+                var roleAddedResult = await _userManager.AddToRoleAsync(
                     dbEmployee,
-                    new Claim(role.GetDisplayName(), role.GetDisplayName())
+                    role.GetDisplayName()
                 );
-                SetEmployeeRoles(dbEmployee as Employee);
-                response.StatusCode = 200;
-                response.Message = "Role Added Successfully";
-            }
-            else
-            {
-                response.StatusCode = 500;
-                response.Message = "Error acured while adding Role: " + roleAddedResult.Errors;
+                if (roleAddedResult.Succeeded)
+                {
+                    var claimRes = await _userManager.AddClaimAsync(
+                        dbEmployee,
+                        new Claim(role.GetDisplayName(), role.GetDisplayName())
+                    );
+                    await SetEmployeeRoles((Employee)dbEmployee);
+                    response.StatusCode = 200;
+                    response.Message = "Role Added Successfully";
+                }
+                else
+                {
+                    response.StatusCode = 500;
+                    response.Message = "Error acured while adding Role: " + roleAddedResult.Errors;
+                }
             }
         }
         catch (Exception ex)
@@ -273,33 +286,34 @@ public class EmployeeService : IEmployeeService
         try
         {
             //using var context = _factory.CreateDbContext();
-            var dbEmployee = await _userManager.FindByIdAsync(employee.Id) as Employee;
-            //var newEmployee = MergeObjects(dbEmployee, employee);
-            dbEmployee.FullName = employee.FullName;
-            dbEmployee.UserName = employee.UserName;
-            dbEmployee.Email = employee.Email;
-            dbEmployee.Salary = employee.Salary;
-            dbEmployee.Type = employee.Type;
-            dbEmployee.Avatar = employee.Avatar;
-            dbEmployee.Role = employee.Role;
-            dbEmployee.Active = employee.Active;
-            dbEmployee.LastPasswordChange = employee.LastPasswordChange;
-            dbEmployee.ChangePaswword = employee.ChangePaswword;
+            if (await _userManager.FindByIdAsync(employee.Id) is Employee dbEmployee)
+            { //var newEmployee = MergeObjects(dbEmployee, employee);
+                dbEmployee.FullName = employee.FullName;
+                dbEmployee.UserName = employee.UserName;
+                dbEmployee.Email = employee.Email;
+                dbEmployee.Salary = employee.Salary;
+                dbEmployee.Type = employee.Type;
+                dbEmployee.Avatar = employee.Avatar;
+                dbEmployee.Role = employee.Role;
+                dbEmployee.Active = employee.Active;
+                dbEmployee.LastPasswordChange = employee.LastPasswordChange;
+                dbEmployee.ChangePaswword = employee.ChangePaswword;
 
-            //context.Update(employee);
-            var updateRes = await _userManager.UpdateAsync(dbEmployee);
+                //context.Update(employee);
+                var updateRes = await _userManager.UpdateAsync(dbEmployee);
 
-            //var result = await context.SaveChangesAsync();
+                //var result = await context.SaveChangesAsync();
 
-            if (updateRes.Succeeded)
-            {
-                response.StatusCode = 200;
-                response.Message = "Employee Updated succesfully";
-            }
-            else
-            {
-                response.StatusCode = 400;
-                response.Message = "Error accurred while Updating Employee";
+                if (updateRes.Succeeded)
+                {
+                    response.StatusCode = 200;
+                    response.Message = "Employee Updated succesfully";
+                }
+                else
+                {
+                    response.StatusCode = 400;
+                    response.Message = "Error accurred while Updating Employee";
+                }
             }
         }
         catch (Exception ex)
@@ -311,8 +325,9 @@ public class EmployeeService : IEmployeeService
         return response;
     }
 
-    private async void SetEmployeeRoles(Employee employee)
+    public async Task<BaseResponse> SetEmployeeRoles(Employee employee)
     {
+        BaseResponse response = new();
         var employeeRoles = await _userManager.GetRolesAsync(employee);
         if (employeeRoles.Count > 0)
         {
@@ -323,6 +338,17 @@ public class EmployeeService : IEmployeeService
             employee.Role = Roles.WhithoutRole;
         }
         var updateRes = await UpdateEmployee(employee);
+        if (updateRes.StatusCode == 200)
+        {
+            response.StatusCode = 200;
+            response.Message = "User Role Set Successfully";
+        }
+        else
+        {
+            response.StatusCode = 500;
+            response.Message = "Error in setting user Role" + updateRes.Message;
+        }
+        return response;
     }
 
     public async Task<BaseResponse> DeleteEmployeeRole(Employee employee, string role)
@@ -331,21 +357,25 @@ public class EmployeeService : IEmployeeService
         try
         {
             var dbEmployee = await _userManager.FindByIdAsync(employee.Id);
-            var result = await _userManager.RemoveFromRoleAsync(dbEmployee, role);
-            if (result.Succeeded)
+            if (dbEmployee != null)
             {
-                var ClaimRes = await _userManager.RemoveClaimAsync(
-                    dbEmployee,
-                    new Claim(role, role)
-                );
-                SetEmployeeRoles(dbEmployee as Employee);
-                response.StatusCode = 200;
-                response.Message = "Role Removed";
-            }
-            else
-            {
-                response.StatusCode = 500;
-                response.Message = "error Removing Role" + result.Errors.ToArray()[0].Description;
+                var result = await _userManager.RemoveFromRoleAsync(dbEmployee, role);
+                if (result.Succeeded && dbEmployee != null)
+                {
+                    var ClaimRes = await _userManager.RemoveClaimAsync(
+                        dbEmployee,
+                        new Claim(role, role)
+                    );
+                    await SetEmployeeRoles((Employee)dbEmployee);
+                    response.StatusCode = 200;
+                    response.Message = "Role Removed";
+                }
+                else
+                {
+                    response.StatusCode = 500;
+                    response.Message =
+                        "error Removing Role" + result.Errors.ToArray()[0].Description;
+                }
             }
         }
         catch (Exception ex)
