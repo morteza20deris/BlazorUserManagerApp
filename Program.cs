@@ -1,6 +1,7 @@
 using BlazorUserManagerApp.Data;
 using BlazorUserManagerApp.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,6 +42,29 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
     dbContext.Database.EnsureCreated();
+
+    // To be Tested
+    //if (dbContext.Database.CanConnect())
+    //{
+    //    dbContext.Database.EnsureCreated();
+    //}
+    //else
+    //{
+    //    try
+    //    {
+    //        dbContext.Database.OpenConnection();
+    //        SqlCommand sqlCommand = new SqlCommand("create databse MyDatabase");
+    //        sqlCommand.ExecuteNonQuery();
+    //    }
+    //    catch (Exception e)
+    //    {
+    //        Console.WriteLine(e.Message);
+    //    }
+    //    finally
+    //    {
+    //        dbContext.Database.CloseConnection();
+    //    }
+    //}
 }
 
 // Configure the HTTP request pipeline.
