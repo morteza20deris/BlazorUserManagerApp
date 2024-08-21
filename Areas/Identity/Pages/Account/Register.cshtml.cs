@@ -63,10 +63,12 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
                 var identity = new Employee
                 {
                     UserName = Input.UserName,
+                    FullName = Input.UserName,
                     Email = Input.EmailAddress,
                     Id = Input.UserName.GetHashCode().ToString(),
                     Active = true,
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    ChangePaswword = false,
                 };
 
                 var result = await _userManager.CreateAsync(identity, Input.Password);

@@ -28,7 +28,7 @@
             if (employee != null)
             {
                 TimeSpan timeSincePasswordChange = DateTime.Now - employee.LastPasswordChange;
-                if (timeSincePasswordChange.Minutes > 1)
+                if (timeSincePasswordChange.Days > 31)
                 {
                     employee.ChangePaswword = true;
                     await employeeService.UpdateEmployee(employee);

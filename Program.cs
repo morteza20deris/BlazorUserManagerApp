@@ -1,10 +1,12 @@
 using BlazorUserManagerApp.Data;
 using BlazorUserManagerApp.Services;
+using ElectronNET.API;
+using ElectronNET.API.Entities;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseElectron(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -13,9 +15,7 @@ builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddSingleton<WeatherForecastService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContextFactory<DataContext>(options =>
-    options.UseSqlServer(connectionString)
-);
+builder.Services.AddDbContextFactory<DataContext>(options => options.UseSqlite(connectionString));
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminPolicy", policy => policy.RequireClaim("Admin"));
@@ -87,5 +87,26 @@ app.UseAuthorization();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
+await Task.Run(async () =>
+{
+    var browserWindow = await Electron.WindowManager.CreateWindowAsync(
+        new BrowserWindowOptions
+        {
+            Width = 1152,
+            Height = 940,
+            Show = false
+        }
+    );
+    await browserWindow.WebContents.Session.ClearCacheAsync();
+
+    browserWindow.OnReadyToShow += () =>
+    {
+        browserWindow.Show();
+        browserWindow.Maximize();
+    };
+
+    Electron.Menu.SetApplicationMenu(new MenuItem[] { });
+});
 
 app.Run();
