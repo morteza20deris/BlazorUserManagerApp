@@ -63,6 +63,9 @@ namespace BlazorUserManagerApp.Areas.Identity.Pages.Account
                 var identity = new Employee
                 {
                     UserName = Input.UserName,
+                    FullName=Input.UserName,
+                    LastPasswordChange= DateTime.Now,
+                    ChangePaswword = false,
                     Email = Input.EmailAddress,
                     Id = Input.UserName.GetHashCode().ToString(),
                     Active = true,

@@ -1,11 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
-﻿﻿﻿<CascadingAuthenticationState>
+<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
             <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        
         </Found>
         <NotFound>
             <PageTitle>Not found</PageTitle>
@@ -13,5 +14,6 @@
                 <p role="alert">Sorry, there's nothing at this address.</p>
             </LayoutView>
         </NotFound>
+
     </Router>
-</CascadingAuthenticationState>
+    </CascadingAuthenticationState>

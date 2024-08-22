@@ -86,11 +86,11 @@
                                 <label for="floatingInput">E-Mail</label>
                             </div>
                             <div class="form-floating mb-3">
-                                <InputNumber class="form-control" id="floatingInput" placeholder="Salary here" @bind-Value="addEmployeeForm.Salary" />
+                                <InputNumber class="form-control" id="floatingInput" disabled=@(MyRoles.Contains(Roles.Admin.GetDisplayName())?false:true) placeholder="Salary here" @bind-Value="addEmployeeForm.Salary" />
                                 <label for="floatingInput">Salary</label>
                             </div>
                             <div class="form-floating mb-3">
-                                <InputSelect shadow rounded id="floatingInput" placeholder="Employee here" @bind-Value="addEmployeeForm.Type" class="form-select">
+                            <InputSelect shadow rounded id="floatingInput" disabled=@(MyRoles.Contains(Roles.Admin.GetDisplayName())?false:true) placeholder="Employee here" @bind-Value="addEmployeeForm.Type" class="form-select">
                                     @foreach (EmployeeType type in Enum.GetValues(typeof(EmployeeType)))
                                     {
                                         <option value="@type">@type.GetDisplayName()</option>
